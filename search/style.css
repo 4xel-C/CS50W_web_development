@@ -1,3 +1,7 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
 .main {
     text-align: center;
     width: 100%;
@@ -6,7 +10,7 @@
 .center {
     display: flex;
     min-height: 250px;
-    height: 70vh;
+    height: 75vh;
     align-items: center;
 }
 
@@ -39,6 +43,12 @@ img {
     max-width: 585px;
     width: 100%;
     box-sizing: border-box;
+    font-size: 1rem;
+}
+
+.text-area:hover, .text-area:focus {
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.2);
+    outline: none;
 }
 
 .button {
@@ -48,6 +58,9 @@ img {
     border: none;
     border-radius: 5px;
     background-color: #FAFAFA;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9rem;
+    color: #505050;
 }
 
 .button:hover {
@@ -55,12 +68,27 @@ img {
     box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
 }
 
+.button:active {
+    border: 1px solid #139cfb;
+}
+
+
 a {
-    margin: 0px 10px;
-    color: black;
+    margin: 0px 5px;
     text-decoration: none;
+    color: black;
+    font-size: 0.83rem;
 }
 
 a:hover {
     text-decoration: underline;
+}
+
+form {
+    margin-bottom: 23px;
+}
+
+p {
+    font-size: 0.8rem;
+    color: #505050;
 }

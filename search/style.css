@@ -1,5 +1,6 @@
 body {
     font-family: 'Roboto', sans-serif;
+    margin: 0;
 }
 
 .main {
@@ -10,7 +11,7 @@ body {
 .center {
     display: flex;
     min-height: 250px;
-    height: 75vh;
+    height: 72vh;
     align-items: center;
 }
 
@@ -19,18 +20,33 @@ img {
 }
 
 .nav-bar {
-    text-align: right;
+    padding-top: 22px;
+    padding-left: 15px;
+    height: 40px;
 }
 
 .nav-container {
-    padding: 10px 5px;
+    display: inline-block;
+    width: 50%;
+    vertical-align: text-top;
+}
+
+.links {
+    display: inline-block;
+    width: 48%;
+    text-align: right;
 }
 
 .logo {
-    width: 400px;
+    max-width: 400px;
     margin: 20px auto;
     padding: 5px 0px;
     position:relative;
+}
+
+.logo_small {
+    width: 74px;
+    height: 24px;
 }
 
 .input {
@@ -57,12 +73,12 @@ img {
     margin: 0px 5px;
     height: 37px;
     width: 135px;
-    border: none;
+    border: 1px solid #f8f9fa;
     border-radius: 5px;
-    background-color: #FAFAFA;
+    background-color: #f8f9fa;
     font-family: 'Roboto', sans-serif;
     font-size: 0.9rem;
-    color: #505050;
+    color: #3c4043;
 }
 
 .button:hover {
@@ -90,7 +106,7 @@ form {
     margin-bottom: 23px;
 }
 
-p {
+.footer {
     font-size: 0.8rem;
     color: #505050;
 }
@@ -101,4 +117,90 @@ p {
     font: 16px/16px Arial, sans-serif;
     top: 81px;
     left: 279px
+}
+
+.appbar {
+    box-sizing:border-box;
+    display: block;
+    margin: 25px 35px;
+}
+
+.appbar > p {
+    color: #d93025;
+    font-size: 20px;
+    margin-left: 10px;
+}
+
+hr {
+    border: 1px solid #ebebeb;
+    width: 100%;
+}
+
+.form-container {
+    margin: 40px 2% 0 45px;
+}
+
+.form-title {
+    font-size: 16px;
+    color: #333;
+    width: 16%;
+    min-width: 167px;   
+}
+
+.form-description {
+    box-sizing: border-box;
+    display: inline-block;
+    width: 180px;
+    min-width: 180px;
+    height: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #222;
+    padding-right: 20px;
+    text-align: left;
+}
+
+.form-input {
+    box-sizing: border-box;
+    display: inline-block;
+    min-width: 200px;
+    width: 100%;
+    height: 28px;
+    border: 1px solid #d9d9d9;
+    border-top: 1px solid #c0c0c0;
+    font-size: 13px;
+    padding: 1px 8px;
+}
+
+.form-input:focus {
+    border: 1px solid #139cfb;
+    outline: none;
+}
+
+.adv_inputs {
+    display: flex;
+    max-width: 750px;
+    height: 45px;
+    align-items: center;
+    padding-right: 10px;
+}
+
+.adv_button {
+    margin-left: auto;
+    height: 30px;
+    min-width: 120px;
+    background-color: #4d90fe;
+    border: 1px solid #3079ed;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.adv_button:hover {
+    background-color: #3079ed;
+    border: 1px solid #3364ff;
+}
+
+.adv_button:active {
+    box-shadow: inset 0 5px 8px rgba(0, 0, 0, 0.2);
 }

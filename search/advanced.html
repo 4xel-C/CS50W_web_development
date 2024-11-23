@@ -10,26 +10,42 @@
     <body>
         <div class="nav-bar">
             <div class="nav-container">
+                <a href="index.html">
+                <img class="logo_small" src="images/google.png" alt="google_small">
+                </a>
+            </div>
+            <div class="links">
                 <a href="index.html">Google Search</a>
-                <a href="image.html">Image Search</a>
             </div>
         </div>
-        <div class="center">
-        <div class="main">
-            <div class="logo">
-                <img src="images/google.png" alt="Google_logo">
-            </div>
+        <div class="appbar">
+            <p>Advanced Search</p>
+        </div>
+        <hr>
+        <div class="form-container">
             <form action="https://google.com/search">
-                <div class="input">
-                    <input class="text-area" type="text" name="q">
+                <p class="form-title">Find pages with...</p>
+                <div class="adv_inputs">
+                    <label class="form-description" for="all_words">all these words: </label>
+                    <input type="text" id="all_words" class="form-input" name="as_q">
                 </div>
-                <div class>
-                    <input class="button" type="submit" value="Google Search">
-                    <input class="button" type="submit" value="I'm Feeling Lucky" name="btnI">
+                <div class="adv_inputs">
+                    <label class="form-description" for="exact">these exact words or phrases: </label>
+                    <input type="text" id="exact" class="form-input" name="as_epq">
+                </div>
+                <div class="adv_inputs">
+                    <label class="form-description" for="exact">any of these words: </label>
+                    <input type="text" id="exact" class="form-input" name="as_oq">
+                </div>
+                <div class="adv_inputs">
+                    <label class="form-description" for="exact">none of these words: </label>
+                    <input type="text" id="exact" class="form-input" name="as_eq">
+                </div>
+                <div class="adv_inputs">
+                    <button class="adv_button" type="submit">Advanced search</button>
                 </div>
             </form>
-            <p>CS50W Googling Page</p>
         </div>
-        </div>
+
     </body>
 </html>

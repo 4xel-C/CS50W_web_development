@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import markdown2
 
 from . import util
 
@@ -20,6 +21,7 @@ def entry(request, title):
         })
 
     # if entry, redirect to the page
+    entry = markdown2.markdown(entry)
     return render(request, "encyclopedia/entry.html", {
         "title": title,
         "entry": entry

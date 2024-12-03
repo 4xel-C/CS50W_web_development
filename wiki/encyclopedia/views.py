@@ -9,13 +9,19 @@ from . import util
 
 # create new text form for the new page form
 class NewPageForm(forms.Form):
-    title = forms.CharField(label="title")
-    content = forms.CharField(label="content",
-                              widget=forms.Textarea(attrs={
-                                'placeholder': 'Write your entry here',
+    title = forms.CharField(label="Title")
+    content = forms.CharField(label='', widget=forms.Textarea(attrs={
+                                'placeholder': 'Write your new entry here',
                                 'class': 'form-control',
-                                'rows': 10,
-                                'style': 'width: 50%'
+                                'rows': 20,
+                                'style': 'width: 50%',
+                              }))
+
+class EditPageForm(forms.Form):
+    content = forms.CharField(label="", widget=forms.Textarea(attrs={
+                                'class': 'form-control',
+                                'rows': 20,
+                                'style': 'width: 50%',
                               }))
 
 def index(request):
@@ -38,6 +44,32 @@ def entry(request, title):
     return render(request, "encyclopedia/entry.html", {
         "title": title,
         "entry": entry
+    })
+
+def edit(request, title):
+    if request.method == "POST":
+        form = EditPageForm(request.POST)
+        
+        if form.is_valid():
+            # recuperate the new content from the form
+            content = form.cleaned_data["content"]
+            # content = content.strip()
+            
+            # update the entry with the new value
+            util.save_entry(title, content)
+            
+            # redirect to the modified page
+            return HttpResponseRedirect(reverse('entry', args=[title]))
+
+    # recuperate the entry and parse it
+    entry = util.get_entry(title)
+    # Prepare the form and insert then default value of it's content to the entry content.
+    form = EditPageForm(initial={'content': entry})
+    
+    return render(request, "encyclopedia/edit.html", {
+        "title": title,
+        "entry": entry, 
+        "form": form
     })
     
 def search(request):

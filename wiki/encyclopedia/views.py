@@ -3,25 +3,31 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 import markdown2
+import random
 
 from . import util
 
 
 # create new text form for the new page form
 class NewPageForm(forms.Form):
-    title = forms.CharField(label="Title")
+    title = forms.CharField(label="Title",
+                            widget=forms.TextInput(attrs={
+                            'class': 'form-control', 
+                            'style': 'width: 100%;',  
+                        })
+                    )
     content = forms.CharField(label='', widget=forms.Textarea(attrs={
                                 'placeholder': 'Write your new entry here',
-                                'class': 'form-control',
+                                'class': 'form-control mt-4',
                                 'rows': 20,
-                                'style': 'width: 50%',
+                                'style': 'width: 100%',
                               }))
 
 class EditPageForm(forms.Form):
     content = forms.CharField(label="", widget=forms.Textarea(attrs={
                                 'class': 'form-control',
                                 'rows': 20,
-                                'style': 'width: 50%',
+                                'style': 'width: 100%',
                               }))
 
 def index(request):
@@ -53,11 +59,10 @@ def edit(request, title):
         if form.is_valid():
             # recuperate the new content from the form
             content = form.cleaned_data["content"]
-            # content = content.strip()
-            
+
             # update the entry with the new value
             util.save_entry(title, content)
-            
+
             # redirect to the modified page
             return HttpResponseRedirect(reverse('entry', args=[title]))
 
@@ -135,3 +140,9 @@ def new_page(request):
     return render(request, "encyclopedia/new_page.html", {
         "form": NewPageForm()
     })
+
+# generate a random page
+def random_page(request):
+    entries = util.list_entries()
+    choice = random.choice(entries)
+    return HttpResponseRedirect(reverse('entry', args=[choice]))

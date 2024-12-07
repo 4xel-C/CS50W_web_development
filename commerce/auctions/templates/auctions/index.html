@@ -1,7 +1,27 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <h2 class="mb-3">Active Listings</h2>
 
-    TODO
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-4">
+      {% for auction in auctions %}
+      <div class="col">
+        <div class="card mb-3">
+          <img src="{{auction.image}}" class="card-img-top" alt="...">
+          <div class="card-body border">
+            <h5 class="card-title">{{auction.item}}</h5>
+            <p class="card-text">{{auction.description}}</p>
+          </div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center"><b>Price: </b><spans>${{auction.price}}</spans></li>
+            <li class="list-group-item d-flex justify-content-center"><a href="#" class="btn btn-primary">Offer Details</a></li>
+          </ul>
+          <div class="card-footer d-flex justify-content-between align-items-center">
+            <spans class="mr-2">Created</spans> {{auction.creation_date}}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
 {% endblock %}

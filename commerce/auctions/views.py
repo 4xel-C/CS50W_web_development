@@ -86,4 +86,11 @@ def create_listing(request):
 
 @login_required
 def listing(request, id):
-    pass
+    try:
+        listing = Auction.objects.get(id=id)
+    except Auction.DoesNotExist:
+        listing = None
+
+    return render(request, "auctions/listing.html", {
+        "listing": listing
+    })

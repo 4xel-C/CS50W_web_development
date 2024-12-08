@@ -3,6 +3,7 @@
 {% block body %}
     <h2 class="mb-3">Active Listings</h2>
 
+    <div class="container-fluid">
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-4">
       {% for auction in auctions %}
       <div class="col">
@@ -13,15 +14,16 @@
             <p class="card-text">{{auction.description}}</p>
           </div>
           <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center"><b>Price: </b><spans>${{auction.price}}</spans></li>
-            <li class="list-group-item d-flex justify-content-center"><a href="#" class="btn btn-primary">Offer Details</a></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center"><b>Price: </b><span>${{auction.price}}</span></li>
+            <li class="list-group-item d-flex justify-content-center"><a href="{% url 'listing' auction.id %}" class="btn btn-primary">Offer Details</a></li>
           </ul>
           <div class="card-footer d-flex justify-content-between align-items-center">
-            <spans class="mr-2">Created</spans> {{auction.creation_date}}
+            <span class="mr-2">Created</span> {{auction.creation_date}}
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
+  </div>
 
 {% endblock %}

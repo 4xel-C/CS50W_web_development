@@ -83,3 +83,7 @@ def create_listing(request):
         return render(request, "auctions/create.html", {
             "form": form
         })
+
+@login_required
+def listing(request, id):
+    pass

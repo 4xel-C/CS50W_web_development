@@ -17,8 +17,11 @@ def index(request):
     })
 
 def login_view(request):
+    # get the value of the next url
+    next = request.GET.get('next', '/')
     if request.method == "POST":
-
+        next_url = request.POST["next"]
+        
         # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
@@ -27,13 +30,16 @@ def login_view(request):
         # Check if authentication successful
         if user is not None:
             login(request, user)
-            return HttpResponseRedirect(reverse("index"))
+            return HttpResponseRedirect(next_url) 
         else:
             return render(request, "auctions/login.html", {
                 "message": "Invalid username and/or password."
             })
     else:
-        return render(request, "auctions/login.html")
+        # pass the next url into the form as an hidden attribute to redirect on the correct page the user wanted
+        return render(request, "auctions/login.html", {
+            'next': next
+        })
 
 
 def logout_view(request):

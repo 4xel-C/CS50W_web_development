@@ -44,8 +44,11 @@ class Bid(models.Model):
 
 class Comment(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.ForeignKey(User, on_delete=models.CASCADE)
-    auction = models.ForeignKey(Auction, on_delete=models.CASCADE)
+    writer = models.ForeignKey(User, on_delete=models.CASCADE)
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="comments")
     text = models.TextField()
     creation_date = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-creation_date']
 

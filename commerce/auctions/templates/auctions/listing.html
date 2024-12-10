@@ -1,7 +1,24 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == "success" %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% elif message.tags == "error" %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+        {% endfor %}
+
+    {% endif %}
     <div class="container">
+        {% if listing %}
         <h2>{{ listing.item }} Details</h2>
         <p class="lead">listed by {{ listing.seller }}</p>
         <div class="row align-items-center">
@@ -28,6 +45,34 @@
             </div>
         </div>
         <h2 class="mt-3">Comments</h2>
+        <form method="POST" action="{% url 'listing' id %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="comment" class="form-label">Add a commentary</label>
+                <textarea class="form-control" id="comment" rows="3" name="text" required></textarea>
+                <input class="btn btn-primary mt-1" type="submit" value="Submit comment">
+            </div>
+        </form>
+        {% if comments %}
+            {% for comment in comments %}
+            <figure class="text-center">
+                <blockquote class="blockquote">
+                  <p>{{ comment.text }}</p>
+                </blockquote>
+                <figcaption class="blockquote-footer">
+                  {{ comment.writer }} on {{ comment.creation_date }}
+                </figcaption>
+            </figure>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No commentaries to display</p>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-danger text-center" role="alert">
+            The listing you are looking for does not exist !
+        </div>
+        {% endif %}
     </div>
 
 {% endblock %}

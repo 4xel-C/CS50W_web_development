@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
@@ -6,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Auction
+from .models import User, Auction, Comment
 from .forms import AuctionForm
 
 
@@ -91,12 +92,33 @@ def create_listing(request):
         })
 
 @login_required
-def listing(request, id):
+def listing(request, id):  
+    
+    # Fetch the listing of the correct id and all the related comments.
     try:
         listing = Auction.objects.get(id=id)
+        comments = listing.comments.all()
     except Auction.DoesNotExist:
         listing = None
-
+    
+    # if a POST request is detected and the id exists
+    if request.method == "POST" and listing:
+        text_comment = request.POST["text"]
+        
+        # creating a new comment in the database
+        if text_comment:
+            comment = Comment(
+                writer = request.user,
+                auction = listing,
+                text = text_comment
+            )
+            comment.save()
+            messages.success(request, "Commentary successfully added!")
+        else:
+            messages.error(request, "You cannot submit an empty comment!")
+    
     return render(request, "auctions/listing.html", {
-        "listing": listing
+        "listing": listing,
+        "comments": comments,
+        "id": id,
     })

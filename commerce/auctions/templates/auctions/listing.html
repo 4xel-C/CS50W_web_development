@@ -68,15 +68,15 @@
         </form>
         {% if comments %}
             <div class="container">
-            <div class="row">
+            <div class="row justify-content-evenly">
             {% for comment in comments %}
             <div class="col-lg-6">
             <figure class="text-center">
                 <blockquote class="blockquote">
-                  <p>{{ comment.text }}</p>
+                  <p class="text-break fs-5">{{ comment.text }}</p>
                 </blockquote>
                 <figcaption class="blockquote-footer">
-                  {{ comment.writer }} on {{ comment.creation_date }}
+                  <strong>{{ comment.writer }}</strong> on {{ comment.creation_date }}
                 </figcaption>
             </figure>
             </div>

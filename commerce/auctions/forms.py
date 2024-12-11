@@ -19,3 +19,4 @@ class AuctionForm(forms.ModelForm):
         
         # no required categories, automaticly set up to "Other" if no specified.
         self.fields['category'].required = False
+

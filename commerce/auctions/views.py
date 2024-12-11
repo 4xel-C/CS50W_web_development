@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Auction, Comment
+from .models import User, Auction, Comment, Watchlist
 from .forms import AuctionForm
 
 
@@ -86,17 +86,20 @@ def create_listing(request):
     if request.method == "POST":
         form = AuctionForm(request.POST)
 
-        if form.is_valid():
+        if form.is_valid() and form.cleaned_data.get('price') > 0:
             auction = form.save(commit=False)
             auction.seller = request.user
             auction.save()
+            messages.success(request, "New auction successfully created!")
             return(HttpResponseRedirect(reverse("index")))
+        
+        else:
+            messages.error(request, "Please enter a correct price")
     
-    else:
-        form = AuctionForm()
-        return render(request, "auctions/create.html", {
-            "form": form
-        })
+    form = AuctionForm()
+    return render(request, "auctions/create.html", {
+        "form": form
+    })
 
 @login_required
 def listing(request, id):  
@@ -105,6 +108,7 @@ def listing(request, id):
     try:
         listing = Auction.objects.get(id=id)
         comments = listing.comments.all()
+        watchlist_entry = Watchlist.objects.filter(user=request.user, id=id)
     except Auction.DoesNotExist:
         return HttpResponseRedirect(reverse("error"))
     
@@ -130,4 +134,48 @@ def listing(request, id):
         "listing": listing,
         "comments": comments,
         "id": id,
+        "watchlist_entry": watchlist_entry 
     })
+    
+@login_required
+def close_auction(request, id):
+    try:
+        auction = Auction.objects.get(id=id)
+    except Auction.DoesNotExist:
+        messages.error(request, "The auction you tried to close does not exist")
+        return HttpResponseRedirect(reverse("index"))
+        
+    if request.method == "POST":
+        if auction.active == False:
+            messages.error(request, "The bid is already closed!.")
+        else: 
+            auction.active = False
+            auction.save()
+            messages.success(request, "The bid has been closed.")
+    
+    return HttpResponseRedirect(reverse("listing", args=[id]))
+
+@login_required
+def add_watchlist(request, id):
+    try:
+        auction = Auction.objects.get(id=id)
+    except Auction.DoesNotExist:
+        messages.error(request, "The auction you tried to add to your watchlist does not exist!")
+        return HttpResponseRedirect(reverse("index"))
+    
+    if request.method == "POST":
+        
+        # check if the watchlist already created, create it if not
+        watchlist, created = Watchlist.objects.get_or_create(user=request.user, auction=auction)
+        
+        if created:
+            messages.success(request, "This auction was added to your watchlist")
+        else: 
+            messages.error(request, "This auction is already in your watch list!")
+            
+    return HttpResponseRedirect(reverse("listing", args=[id]))
+
+        
+        
+        
+    

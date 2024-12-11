@@ -74,6 +74,13 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
 
+def error(request):
+    return render(request, "auctions/error.html")
+
+# if someone try to access /listing/ url without providing IDs
+def no_id(request):
+    return HttpResponseRedirect(reverse("index"))
+
 @login_required
 def create_listing(request):
     if request.method == "POST":
@@ -99,13 +106,13 @@ def listing(request, id):
         listing = Auction.objects.get(id=id)
         comments = listing.comments.all()
     except Auction.DoesNotExist:
-        listing = None
+        return HttpResponseRedirect(reverse("error"))
     
     # if a POST request is detected and the id exists
     if request.method == "POST" and listing:
         text_comment = request.POST["text"]
         
-        # creating a new comment in the database
+        # creating a new comment in the database only if a text is entered
         if text_comment:
             comment = Comment(
                 writer = request.user,
@@ -114,6 +121,8 @@ def listing(request, id):
             )
             comment.save()
             messages.success(request, "Commentary successfully added!")
+
+        # generate an error message if the text input is posted empty
         else:
             messages.error(request, "You cannot submit an empty comment!")
     

@@ -146,7 +146,7 @@ def close_auction(request, id):
         return HttpResponseRedirect(reverse("index"))
         
     if request.method == "POST":
-        if auction.active == False:
+        if not auction.active:
             messages.error(request, "The bid is already closed!.")
         else: 
             auction.active = False

@@ -24,6 +24,7 @@ class Auction(models.Model):
     image = models.URLField(max_length=300, null=True, blank=True, default='https://paytmblogcdn.paytm.com/wp-content/uploads/2024/04/Blog_Generic_Difference-Between-Hallmarked-Gold-KDM-and-916-Gold.jpg')
     creation_date = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
+    active = models.BooleanField(default=True)
 
     # when querying the objects, order the items by creation_date (last created comes first)
     class Meta:
@@ -52,3 +53,12 @@ class Comment(models.Model):
     class Meta:
         ordering = ['-creation_date']
 
+class Watchlist(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watchlists')
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE)
+    
+    # unique constraint
+    class Meta:
+        unique_together = ('user', 'auction') 
+    

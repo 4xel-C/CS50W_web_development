@@ -12,8 +12,17 @@ from .forms import AuctionForm
 
 
 def index(request):
-    auctions = Auction.objects.all()
+
+    auctions = Auction.objects.filter(active=True)
     return render(request, "auctions/index.html", {
+        "auctions": auctions
+    })
+
+def closed(request):
+
+    # fetch all closed auctions
+    auctions = Auction.objects.filter(active=False)
+    return render(request, "auctions/closed.html", {
         "auctions": auctions
     })
 
@@ -108,7 +117,7 @@ def listing(request, id):
     try:
         listing = Auction.objects.get(id=id)
         comments = listing.comments.all()
-        watchlist_entry = Watchlist.objects.filter(user=request.user, id=id)
+        watchlist_entry = Watchlist.objects.filter(user=request.user, auction=listing).first()
     except Auction.DoesNotExist:
         return HttpResponseRedirect(reverse("error"))
     
@@ -167,12 +176,34 @@ def add_watchlist(request, id):
         
         # check if the watchlist already created, create it if not
         watchlist, created = Watchlist.objects.get_or_create(user=request.user, auction=auction)
-        
-        if created:
-            messages.success(request, "This auction was added to your watchlist")
-        else: 
+        if not auction.active:
+            messages.error(request, "This auction is closed and cannot be added to your watch list!")
+        elif not created:
+            print(created)
             messages.error(request, "This auction is already in your watch list!")
+        elif created:
+            messages.success(request, "This auction was added to your watchlist")
             
+    return HttpResponseRedirect(reverse("listing", args=[id]))
+
+@login_required
+def remove_watchlist(request, id):
+    try:
+        auction = Auction.objects.get(id=id)
+    except Auction.DoesNotExist:
+        messages.error(request, "The auction you tried to remove from your watchlist does not exist!")
+        return HttpResponseRedirect(reverse("index"))
+    
+    if request.method == "POST":
+        
+        # check if the watchlist already created, create it if not
+        entry = Watchlist.objects.filter(user=request.user, auction=auction).first()
+        if not entry:
+            messages.error(request, "This auction is not in your watchlist")
+        else:
+            entry.delete()
+            messages.info(request, "The auction was removed from your watchlist.")
+
     return HttpResponseRedirect(reverse("listing", args=[id]))
 
         

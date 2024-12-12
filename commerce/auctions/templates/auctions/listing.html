@@ -13,6 +13,11 @@
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+            {% elif message.tags == "info" %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
             {% endif %}
         {% endfor %}
 
@@ -43,14 +48,22 @@
 
                 <div class="row justify-content-center">
                     <div class="col-lg-4 col-12 mb-2">
-                        <form method="post" action="{% url 'listing' id %}">
-                            <button type="submit" class="btn btn-primary w-100">Add to Watchlist</button>
+                        {% if not watchlist_entry %}
+                        <form method="post" action="{% url 'add_watchlist' id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary w-100 {% if listing.active == False %}disabled{% endif %}">Add to Watchlist</button>
                         </form>
+                        {% else %}
+                        <form method="post" action="{% url 'remove_watchlist' id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning w-100">Remove from Watchlist</button>
+                        </form>
+                        {% endif %}
                     </div>
                     <div class="col-lg-4 col-12">
                         <form method="post" action="{% url 'close_auction' id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-warning w-100" {% if listing.active == False %}disabled{% endif %}>Close the auction</button>
+                            <button type="submit" class="btn btn-danger w-100" {% if not listing.active %}disabled{% endif %}>Close the auction</button>
                         </form>
                     </div>
                 </div>

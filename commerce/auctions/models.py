@@ -20,6 +20,7 @@ class Auction(models.Model):
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sales")
     item = models.CharField(max_length=64)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    proposed_price = models.DecimalField(max_digits=10, null=True, decimal_places=2)
     description = models.CharField(max_length=255)
     image = models.URLField(max_length=300, null=True, blank=True, default='https://paytmblogcdn.paytm.com/wp-content/uploads/2024/04/Blog_Generic_Difference-Between-Hallmarked-Gold-KDM-and-916-Gold.jpg')
     creation_date = models.DateTimeField(auto_now_add=True)
@@ -40,6 +41,7 @@ class Auction(models.Model):
 class Bid(models.Model):
     id = models.AutoField(primary_key=True)
     bidder = models.ForeignKey(User, on_delete=models.CASCADE)
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="Bids")
     offer = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
 

@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Auction, Comment, Watchlist
+from .models import User, Auction, Comment, Watchlist, Bid
 from .forms import AuctionForm
 
 
@@ -208,7 +208,42 @@ def remove_watchlist(request, id):
 
     return HttpResponseRedirect(reverse("listing", args=[id]))
 
-        
-        
-        
+@login_required
+def bid(request, id):
+    try:
+        auction = Auction.objects.get(id=id)
+    except Auction.DoesNotExist:
+        messages.error(request, "The auction you tried to bid on does not exist!")
+        return HttpResponseRedirect(reverse("index"))
     
+    if request.method == "POST":
+
+        # ensure 2 decimal numbers
+        amount = round(float(request.POST.get("bid_amount")), 2)
+        print(amount)
+        
+        if amount < auction.price:
+            messages.error(request, "The amount you want to bid should be higher than the initial price!")
+            return HttpResponseRedirect(reverse("listing", args=[id]))
+        
+        elif auction.proposed_price:
+            if amount < auction.proposed_price:
+                messages.error(request, "The amount you want to bid should be higher than the current bid!")
+                return HttpResponseRedirect(reverse("listing", args=[id]))
+        
+        
+        # update the value of the auction
+        auction.proposed_price = amount
+        auction.save()
+        
+        # create the bid history to keep track of who bid on which auction
+        new_bid = Bid.objects.create(
+        bidder=request.user,
+        auction=auction,
+        offer=amount
+        )
+        messages.success(request, "Your bid was placed on the auction")
+        return HttpResponseRedirect(reverse("listing", args=[id]))
+    
+    # return to index if no post request
+    return HttpResponseRedirect(reverse("index"))

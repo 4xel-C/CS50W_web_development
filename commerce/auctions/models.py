@@ -16,8 +16,8 @@ class Category(models.Model):
         return f"{self.name}"
 
 class Auction(models.Model):
-    id = models.AutoField(primary_key=True)
-    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sales")
+    id = models.AutoField(primary_key=True, null=False)
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sales", null=False)
     item = models.CharField(max_length=64)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     proposed_price = models.DecimalField(max_digits=10, null=True, decimal_places=2)
@@ -26,6 +26,8 @@ class Auction(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
     active = models.BooleanField(default=True)
+    winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="won_auctions", null=True)
+    
 
     # when querying the objects, order the items by creation_date (last created comes first)
     class Meta:
@@ -41,7 +43,7 @@ class Auction(models.Model):
 class Bid(models.Model):
     id = models.AutoField(primary_key=True)
     bidder = models.ForeignKey(User, on_delete=models.CASCADE)
-    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="Bids")
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="bids")
     offer = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
 
@@ -63,4 +65,6 @@ class Watchlist(models.Model):
     # unique constraint
     class Meta:
         unique_together = ('user', 'auction') 
+
+    
     

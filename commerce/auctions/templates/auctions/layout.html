@@ -19,7 +19,7 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Listing</a>
+                        <a class="nav-link dropdown-toggle {% if '/' == request.path or 'closed' in request.path or 'create' in request.path %} active {% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Listing</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{% url 'index' %}">Active listings</a></li>
                             <li><a class="dropdown-item" href="{% url 'closed' %}">Closed Listings</a></li>
@@ -27,18 +27,18 @@
                             <li><a class="dropdown-item" href="{% url 'create' %}">Create Listing</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item"><a class="nav-link disabled" href="#">Categories</a></li>
-                    <li class="nav-item"><a class="nav-link disabled" href="#">Watchlist</a></li>
-                    <li class="nav-item"><a class="nav-link disabled" href="#">My auctions</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="{% url 'logout' %}">Log Out</a></li>
+                    <li class="nav-item"><a class="nav-link {% if 'categories' in request.path %} active {% endif %} disabled" href="#">Categories</a></li>
+                    <li class="nav-item"><a class="nav-link {% if 'watchlist' in request.path %} active {% endif %} disabled" href="#">Watchlist</a></li>
+                    <li class="nav-item"><a class="nav-link {% if 'auctions' in request.path %} active {% endif %} disabled" href="#">My auctions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Log Out</a></li>
                 </ul>
                 <form class="d-flex" role="search">
                   <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
                   <button class="btn btn-outline-success" type="submit">Search</button>
                 </form>
                 {% else %}
-                <li class="nav-item"><a class="nav-link active" href="{% url 'login' %}">Log In</a></li>
-                <li class="nav-item"><a class="nav-link active" href="{% url 'register' %}">Register</a></li>
+                <li class="nav-item"><a class="nav-link {% if 'login' in request.path %} active {% endif %}" href="{% url 'login' %}">Log In</a></li>
+                <li class="nav-item"><a class="nav-link {% if 'egister' in request.path %} active {% endif %}" href="{% url 'register' %}">Register</a></li>
                 {% endif %}
               </div>
             </div>

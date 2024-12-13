@@ -63,7 +63,7 @@
                     <div class="col-lg-4 col-12">
                         <form method="post" action="{% url 'close_auction' id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger w-100" {% if not listing.active %}disabled{% endif %}>Close the auction</button>
+                            <button type="submit" class="btn btn-danger w-100" {% if not listing.active or request.user != listing.seller %}disabled{% endif %}>Close the auction</button>
                         </form>
                     </div>
                 </div>

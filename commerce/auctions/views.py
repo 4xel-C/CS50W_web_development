@@ -156,7 +156,9 @@ def close_auction(request, id):
         
     if request.method == "POST":
         if not auction.active:
-            messages.error(request, "The bid is already closed!.")
+            messages.error(request, "The bid is already closed!")
+        elif request.user != auction.seller: 
+            messages.error(request, "You do not own the auction!")
         else: 
             auction.active = False
             auction.save()

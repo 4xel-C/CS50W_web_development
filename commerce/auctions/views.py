@@ -250,6 +250,7 @@ def bid(request, id):
     # return to index if no post request
     return HttpResponseRedirect(reverse("index"))
 
+# display the categories
 def categories(request):
 
     # annotate the categories to get the count of active auctions
@@ -259,4 +260,52 @@ def categories(request):
     
     return render(request, 'auctions/categories.html', {
         "categories": categories,
+    })
+
+# display the auctions by categories
+def auctions_by_category(request, category):
+    auctions = Auction.objects.filter(category__name__iexact=category, active=True)
+
+    if not auctions:
+        messages.info(request, "No auctions found in the selected category")
+        return HttpResponseRedirect(reverse('categories'))
+
+    return render(request, "auctions/auctions_cat.html", {
+        "category": category,
+        "auctions": auctions
+    })
+
+# search bar result
+def search(request):
+    query = request.GET.get('q')
+
+    if query:
+        auctions = Auction.objects.filter(item__icontains=query, active=True)
+
+        if not auctions:
+            messages.info(request, f"No auctions containing the keyword '{query}' was found")
+
+        return render(request, 'auctions/search.html', {
+            "auctions": auctions, 
+            "query": query
+        })
+    
+    return HttpResponseRedirect(reverse('index'))
+
+# watchlist
+@login_required
+def watchlist(request):
+
+    # get the auctions of the corresponding watchlist.
+    items = Watchlist.objects.filter(user=request.user)
+    auctions = [item.auction for item in items]
+    return render(request, "auctions/watchlist.html", {
+        "auctions": auctions
+    })
+
+@login_required
+def myauctions(request):
+    auctions = Auction.objects.filter(seller=request.user)
+    return render(request, "auctions/myauctions.html", {
+        "auctions": auctions
     })

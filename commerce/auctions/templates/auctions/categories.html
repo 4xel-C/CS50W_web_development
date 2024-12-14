@@ -1,0 +1,20 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+<div class="container text-center">
+    <h2>Select a category</h2>
+    <div class="row justify-content-evenly">
+        <div class="col-md-7 col-lg-5">
+            <ul class="list-group">
+                {% for category in categories %}
+                <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                {{ category.name }}
+                <span class="badge text-bg-primary rounded-pill">{{ category.auction_count }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

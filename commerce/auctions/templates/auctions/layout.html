@@ -27,7 +27,7 @@
                             <li><a class="dropdown-item" href="{% url 'create' %}">Create Listing</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item"><a class="nav-link {% if 'categories' in request.path %} active {% endif %} disabled" href="#">Categories</a></li>
+                    <li class="nav-item"><a class="nav-link {% if 'categories' in request.path %} active {% endif %}" href="{% url 'categories' %}">Categories</a></li>
                     <li class="nav-item"><a class="nav-link {% if 'watchlist' in request.path %} active {% endif %} disabled" href="#">Watchlist</a></li>
                     <li class="nav-item"><a class="nav-link {% if 'auctions' in request.path %} active {% endif %} disabled" href="#">My auctions</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Log Out</a></li>

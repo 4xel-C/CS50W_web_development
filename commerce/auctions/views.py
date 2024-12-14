@@ -3,11 +3,12 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
+from django.db.models import Count, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Auction, Comment, Watchlist, Bid
+from .models import User, Auction, Comment, Watchlist, Bid, Category
 from .forms import AuctionForm
 
 
@@ -232,8 +233,9 @@ def bid(request, id):
                 return HttpResponseRedirect(reverse("listing", args=[id]))
         
         
-        # update the value of the auction
+        # update the value of the auction and update the potential winner of the auction
         auction.proposed_price = amount
+        auction.winner = request.user
         auction.save()
         
         # create the bid history to keep track of who bid on which auction
@@ -247,3 +249,14 @@ def bid(request, id):
     
     # return to index if no post request
     return HttpResponseRedirect(reverse("index"))
+
+def categories(request):
+
+    # annotate the categories to get the count of active auctions
+    categories = Category.objects.annotate(
+        auction_count=Count('sorted_auctions', filter=Q(sorted_auctions__active=True))
+        )
+    
+    return render(request, 'auctions/categories.html', {
+        "categories": categories,
+    })

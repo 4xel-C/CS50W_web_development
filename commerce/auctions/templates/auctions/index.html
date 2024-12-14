@@ -35,7 +35,7 @@
             <p class="card-text text-truncate">{{auction.description}}</p>
           </div>
           <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center"><b>Price: </b><span>${{auction.price}}</span></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center"><b>Price: </b><span>{% if auction.proposed_price %} ${{ auction.proposed_price }}  {% else %} ${{ auction.price }} {% endif %}</span></li>
             <li class="list-group-item d-flex justify-content-center"><a href="{% url 'listing' auction.id %}" class="btn btn-primary">Offer Details</a></li>
           </ul>
           <div class="card-footer d-flex justify-content-between align-items-center">

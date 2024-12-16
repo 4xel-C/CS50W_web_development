@@ -1,10 +1,9 @@
-from django import forms
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.db.models import Count, Q
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -242,7 +241,7 @@ def bid(request, id):
         auction.save()
         
         # create the bid history to keep track of who bid on which auction
-        new_bid = Bid.objects.create(
+        Bid.objects.create(
         bidder=request.user,
         auction=auction,
         offer=amount

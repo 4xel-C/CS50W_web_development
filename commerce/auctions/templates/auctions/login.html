@@ -2,12 +2,12 @@
 
 {% block body %}
 
+<div class="container">
     <h2>Login</h2>
 
     {% if message %}
         <div>{{ message }}</div>
     {% endif %}
-
     <form action="{% url 'login' %}" method="post">
         {% csrf_token %}
         {% comment %} hide the value of the next url {% endcomment %}
@@ -22,5 +22,5 @@
     </form>
 
     Don't have an account? <a href="{% url 'register' %}">Register here.</a>
-
+</div>
 {% endblock %}

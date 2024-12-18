@@ -2,35 +2,14 @@
 
 {% block body %}
 
-{% comment %} Messages pop ups section {% endcomment %}
+    <h2 class="mb-3">Active Listings for category: {{ category }}</h2>
 
-  {% if messages %}
-    {% for message in messages %}
-        {% if message.tags == "success" %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ message }} 
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% elif message.tags == "error" %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endif %}
-    {% endfor %}
-  {% endif %}
-
-{% comment %} Content of the page {% endcomment %}
-
-    
-
-    <div class="container">
-      <h2 class="mb-3">Active Listings</h2>
+    <div class="container-fluid">
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-4 align-items-center">
       {% for auction in auctions %}
       <div class="col">
         <div class="card mb-3">
-          <img src="{{auction.image}}" class="card-img-top img-fluid" alt="..." style="height: 200px; object-fit: contain;">
+          <img src="{{auction.image}}" class="card-img-top" alt="...">
           <div class="card-body border">
             <h5 class="card-title text-truncate">{{auction.item}}</h5>
             <p class="card-text text-truncate">{{auction.description}}</p>

@@ -10,7 +10,7 @@ class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['name'] 
 
     def __str__(self):
         return f"{self.name}"
@@ -24,7 +24,7 @@ class Auction(models.Model):
     description = models.CharField(max_length=255)
     image = models.URLField(max_length=300, null=True, blank=True, default='https://paytmblogcdn.paytm.com/wp-content/uploads/2024/04/Blog_Generic_Difference-Between-Hallmarked-Gold-KDM-and-916-Gold.jpg')
     creation_date = models.DateTimeField(auto_now_add=True)
-    category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
+    category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL, related_name="sorted_auctions")
     active = models.BooleanField(default=True)
     winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="won_auctions", null=True)
     
@@ -36,9 +36,13 @@ class Auction(models.Model):
     def save(self, *args, **kwargs):
         
         # Update the category to "Other" if no categories are selected
+        default_category, created = Category.objects.get_or_create(name='Not categorized')
         if not self.category:
-            self.category = Category.objects.get(name='Other')
+            self.category = default_category
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.item}"
 
 class Bid(models.Model):
     id = models.AutoField(primary_key=True)
@@ -46,6 +50,9 @@ class Bid(models.Model):
     auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="bids")
     offer = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.bidder} offered ${self.offer} on {self.auction}"
 
 class Comment(models.Model):
     id = models.AutoField(primary_key=True)
@@ -56,6 +63,9 @@ class Comment(models.Model):
     
     class Meta:
         ordering = ['-creation_date']
+
+    def __str__(self):
+        return f"{self.writer} commented over {self.auction} on {self.creation_date}"
 
 class Watchlist(models.Model):
     id = models.AutoField(primary_key=True)

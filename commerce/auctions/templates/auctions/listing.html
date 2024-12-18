@@ -24,7 +24,16 @@
     {% endif %}
     <div class="container">
         <h2>{{ listing.item }} Details</h2>
+
+        <!-- if a closed auction if won by the user -->
+        {% if listing.winner == request.user and not listing.active %}
+        <div class="alert alert-info" role="alert">
+            You won this auction!
+        </div>
+        {% endif %}
+
         <p class="lead">listed by {{ listing.seller }}</p>
+
         <div class="row align-items-center">
             <div class="col-lg-5"><img class="img-fluid img-thumbnail rounded" src="{{ listing.image }}" alt="image"></div>
             <div class="col">

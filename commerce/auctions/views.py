@@ -1,13 +1,13 @@
-from django import forms
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models import Count, Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Auction, Comment, Watchlist, Bid
+from .models import User, Auction, Comment, Watchlist, Bid, Category
 from .forms import AuctionForm
 
 
@@ -69,7 +69,10 @@ def register(request):
             return render(request, "auctions/register.html", {
                 "message": "Passwords must match."
             })
-
+        elif not username or not email or not password:
+            return render(request, "auctions/register.html", {
+                "message": "Missing informations!"
+            })
         # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
@@ -232,12 +235,13 @@ def bid(request, id):
                 return HttpResponseRedirect(reverse("listing", args=[id]))
         
         
-        # update the value of the auction
+        # update the value of the auction and update the potential winner of the auction
         auction.proposed_price = amount
+        auction.winner = request.user
         auction.save()
         
         # create the bid history to keep track of who bid on which auction
-        new_bid = Bid.objects.create(
+        Bid.objects.create(
         bidder=request.user,
         auction=auction,
         offer=amount
@@ -247,3 +251,63 @@ def bid(request, id):
     
     # return to index if no post request
     return HttpResponseRedirect(reverse("index"))
+
+# display the categories
+def categories(request):
+
+    # annotate the categories to get the count of active auctions
+    categories = Category.objects.annotate(
+        auction_count=Count('sorted_auctions', filter=Q(sorted_auctions__active=True))
+        )
+    
+    return render(request, 'auctions/categories.html', {
+        "categories": categories,
+    })
+
+# display the auctions by categories
+def auctions_by_category(request, category):
+    auctions = Auction.objects.filter(category__name__iexact=category, active=True)
+
+    if not auctions:
+        messages.info(request, "No auctions found in the selected category")
+        return HttpResponseRedirect(reverse('categories'))
+
+    return render(request, "auctions/auctions_cat.html", {
+        "category": category,
+        "auctions": auctions
+    })
+
+# search bar result
+def search(request):
+    query = request.GET.get('q')
+
+    if query:
+        auctions = Auction.objects.filter(item__icontains=query, active=True)
+
+        if not auctions:
+            messages.info(request, f"No auctions containing the keyword '{query}' was found")
+
+        return render(request, 'auctions/search.html', {
+            "auctions": auctions, 
+            "query": query
+        })
+    
+    return HttpResponseRedirect(reverse('index'))
+
+# watchlist
+@login_required
+def watchlist(request):
+
+    # get the auctions of the corresponding watchlist.
+    items = Watchlist.objects.filter(user=request.user)
+    auctions = [item.auction for item in items]
+    return render(request, "auctions/watchlist.html", {
+        "auctions": auctions
+    })
+
+@login_required
+def myauctions(request):
+    auctions = Auction.objects.filter(seller=request.user)
+    return render(request, "auctions/myauctions.html", {
+        "auctions": auctions
+    })

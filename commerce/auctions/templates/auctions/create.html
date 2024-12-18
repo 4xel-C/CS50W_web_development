@@ -10,12 +10,13 @@
             </div>
             {% endif %}
         {% endfor %}
-
     {% endif %}
+    <div class="container">
     <h2>Create a listing</h2>
     <form action="", method="post">
         {% csrf_token %}
         {{ form }}
         <input type="submit" value="Publish" class="btn btn-primary mt-3">
     </form>
+    </div>
 {% endblock %}

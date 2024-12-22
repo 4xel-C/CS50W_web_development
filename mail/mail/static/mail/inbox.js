@@ -64,54 +64,46 @@ function load_detail(id, mailbox) {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#emails-detail').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
-
-  // fetch the informations of the corresponding mail
+  
+  // extract datas
   fetch(`/emails/${id}`)
   .then(response => response.json())
   .then(email => {
+
     // Print email
     console.log(email);
-    
-    // extract datas
-    sender = email.sender;
-    recipients = email.recipients.join(", ");
-    subject = email.subject;
-    body = email.body;
-    timestamp = email.timestamp;
-    read = email.read;
-    archived = email.archived
 
-  // Inject the information into the html
-  document.querySelector('#detail-sender').innerHTML = `${sender}`;
-  document.querySelector('#detail-recipients').innerHTML = `${recipients}`
-  document.querySelector('#detail-subject').innerHTML = `${subject}`
-  document.querySelector('#detail-body').innerHTML = `${body}`
-  document.querySelector('#detail-timestamp').innerHTML = `${timestamp}`
+    // Inject the information into the html
+    document.querySelector('#detail-sender').innerHTML = `${email.sender}`;
+    document.querySelector('#detail-recipients').innerHTML = `${email.recipients}`;
+    document.querySelector('#detail-subject').innerHTML = `${email.subject}`;
+    document.querySelector('#detail-body').innerHTML = `${email.body}`;
+    document.querySelector('#detail-timestamp').innerHTML = `${email.timestamp}`;
 
-  // Adapt the archive button depending of the status
-  archiveButton = document.querySelector('#detail-archButton')
-  archiveButton.style.display = 'inline-block';
-  archiveButton.innerHTML = 'Archive';
-  if (mailbox === 'sent') {
-    // if mail from sent box => cannot be archived
-    archiveButton.style.display = 'none';
-  } else if (archived) {
-    archiveButton.innerHTML = 'Unarchive';
-  }
-  
+    // if mailbox !== sent => make the Archive / unarchive button appear
+    const buttonsContainer = document.querySelector('#buttons');
 
-  // Send a post request to mark the message as 'viewed' if not viewed
-  if (!read){
-    fetch(`/emails/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-          read: true
+    if (mailbox !== 'sent'){
+      buttonsContainer.innerHTML = `<button class="btn btn-primary mt-3">Reply</button>
+                                   <button class="btn btn-primary mt-3 ms-3" id="detail-archButton">${email.archived ? 'Unarchive' : 'Archive'}</button>`
+      const archiveButton = buttonsContainer.querySelector('#detail-archButton');
+      archiveButton.addEventListener('click', () => {
+        fetch(`/emails/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+              archived: !email.archived
+          })
+        })
+        .then( () => {
+          load_mailbox('inbox');
+        })
       })
-    })
-  };
-});
-
-}
+                                   
+    } else {
+      buttonsContainer.innerHTML = `<button class="btn btn-primary mt-3">Reply</button>`
+    }
+  });
+};
 
 // ----------------------------------------------------Mail box displaying
 function load_mailbox(mailbox) {
@@ -181,6 +173,14 @@ function add_mail(mail, mailbox){
 
   // event listerner to make GET request when clicking on a mail and access the detail view
   row.addEventListener('click', () => {
+    if (!read){
+      fetch(`/emails/${mail.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            read: true
+        })
+      })
+  }
     load_detail(id, mailbox);
   });
 
@@ -193,7 +193,7 @@ function add_mail(mail, mailbox){
     event.stopPropagation();
 
     // Post action to archive or unarchive the email depending if the mail is already archived
-    fetch(`/emails/${id}`, {
+    fetch(`/emails/${id}`, { 
       method: 'PUT',
       body: JSON.stringify({
           archived: !archived
@@ -211,4 +211,4 @@ function add_mail(mail, mailbox){
 
   // append the row to the table
   document.querySelector("#emails-table").append(row);
-};
+}

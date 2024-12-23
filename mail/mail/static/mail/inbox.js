@@ -60,7 +60,7 @@ function compose_email(answerData) {
         alert('Error: ' + result.error);
       } else {
         // load inbox if the message if succesfully sent
-        load_mailbox('inbox');  
+        load_mailbox('sent');  
       }
     });
   }
@@ -84,7 +84,8 @@ function load_detail(id, mailbox) {
     document.querySelector('#detail-sender').innerHTML = `${email.sender}`;
     document.querySelector('#detail-recipients').innerHTML = `${email.recipients}`;
     document.querySelector('#detail-subject').innerHTML = `${email.subject}`;
-    document.querySelector('#detail-body').innerHTML = `${email.body}`;
+    // Use RegEx to replace \n by <br> tags to display linebreaks
+    document.querySelector('#detail-body').innerHTML = `${email.body.replace(/\n/g, '<br>')}`;
     document.querySelector('#detail-timestamp').innerHTML = `${email.timestamp}`;
 
     // if mailbox !== sent => make the Archive / unarchive button appear

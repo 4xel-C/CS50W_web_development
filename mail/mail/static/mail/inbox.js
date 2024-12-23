@@ -17,7 +17,6 @@ function compose_email(answerData) {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#emails-detail').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
-
   
   // Clear out composition fields if new mail
   document.querySelector('#compose-recipients').value = '';
@@ -25,7 +24,8 @@ function compose_email(answerData) {
   document.querySelector('#compose-body').value = '';
 
   // prefill the form if the function loaded from a 'reply' button
-  if (answerData !== undefined) {
+  if (answerData.sender !== undefined) {
+    console.log(answerData)
     document.querySelector('#compose-recipients').value = answerData.sender;
     document.querySelector('#compose-subject').value = answerData.subject;
     document.querySelector('#compose-body').value = answerData.body;

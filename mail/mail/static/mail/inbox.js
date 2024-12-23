@@ -11,21 +11,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ----------------------------------------------------Email composition
-function compose_email() {
+function compose_email(answerData) {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#emails-detail').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
-  // Clear out composition fields
+  
+  // Clear out composition fields if new mail
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
 
+  // prefill the form if the function loaded from a 'reply' button
+  if (answerData !== undefined) {
+    document.querySelector('#compose-recipients').value = answerData.sender;
+    document.querySelector('#compose-subject').value = answerData.subject;
+    document.querySelector('#compose-body').value = answerData.body;
+  }
+
   // Post the form content if submit button is pressed
-  const form = document.querySelector('#compose-form');
-  form.onsubmit = (event) => {
+  
+  document.querySelector('#compose-form').onsubmit = (event) => {
 
     // prevent the default submission (stay on the Compose page if an error response is returned from the api)
     event.preventDefault();
@@ -50,7 +58,6 @@ function compose_email() {
       if (result.error){
         // display the error if response 400 fro the API
         alert('Error: ' + result.error);
-        compose_email();
       } else {
         // load inbox if the message if succesfully sent
         load_mailbox('inbox');  
@@ -84,8 +91,10 @@ function load_detail(id, mailbox) {
     const buttonsContainer = document.querySelector('#buttons');
 
     if (mailbox !== 'sent'){
-      buttonsContainer.innerHTML = `<button class="btn btn-primary mt-3">Reply</button>
+      buttonsContainer.innerHTML = `<button class="btn btn-primary mt-3" id="detail-replyButton">Reply</button>
                                    <button class="btn btn-primary mt-3 ms-3" id="detail-archButton">${email.archived ? 'Unarchive' : 'Archive'}</button>`
+      
+      // Add an event listener to the archive button if created to archive/unarchive the mail and reload the inbox menu  
       const archiveButton = buttonsContainer.querySelector('#detail-archButton');
       archiveButton.addEventListener('click', () => {
         fetch(`/emails/${id}`, {
@@ -100,8 +109,31 @@ function load_detail(id, mailbox) {
       })
                                    
     } else {
-      buttonsContainer.innerHTML = `<button class="btn btn-primary mt-3">Reply</button>`
+      buttonsContainer.innerHTML = `<button class="btn btn-primary mt-3" id="detail-replyButton">Reply</button>`
     }
+
+    // Prepare the data to answer the mail in another to object to make sur the previous eventListener work with the original datas
+    const answerData = {
+      timestamp: email.timestamp,
+      sender: email.sender,
+      subject: email.subject,
+      body: email.body
+    }
+
+    // Prepare the subject: adds 'Re: ' to the subject of the email to show an answer if not already in the subject
+    if (answerData.subject.indexOf('Re: ') !== 0) {
+      answerData.subject = 'Re: ' + answerData.subject;
+    }
+
+    // Prepare the body: provides some infos concerning the answered mail
+    const prepend = `On ${answerData.timestamp} ${answerData.sender} wrote:\n\n`;
+    answerData.body = prepend + answerData.body;
+
+    // Add an event listener to the 'Reply' button to load the pre-completed form with the correct informations
+    const replyButton = buttonsContainer.querySelector('#detail-replyButton');
+    replyButton.addEventListener('click', () => {
+      compose_email(answerData);
+    });
   });
 };
 
@@ -140,6 +172,7 @@ function load_mailbox(mailbox) {
 
 // ----------------------------------------------------Function to add an email to the mails table
 function add_mail(mail, mailbox){
+
   // getting the data of the mail
   const sender = mail.sender;
   const subject = mail.subject;
@@ -180,7 +213,7 @@ function add_mail(mail, mailbox){
             read: true
         })
       })
-  }
+    }
     load_detail(id, mailbox);
   });
 
@@ -189,7 +222,7 @@ function add_mail(mail, mailbox){
   if (archiveButton){
   archiveButton.addEventListener('click', (event) =>  {
 
-    // Stop the click event from propagation to the row
+    // Stop the click event from propagating to the row and prevent entering mail details
     event.stopPropagation();
 
     // Post action to archive or unarchive the email depending if the mail is already archived
@@ -202,7 +235,7 @@ function add_mail(mail, mailbox){
     .then(response => {
       if (response.ok) {
 
-        // make it disapear from the list
+        // remove the row if sent to archive, or dearchived
         row.remove();
       }
     });

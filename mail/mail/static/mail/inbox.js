@@ -147,19 +147,20 @@ function load_mailbox(mailbox) {
   document.querySelector('#compose-view').style.display = 'none';
 
   // Show the mailbox name (adding the header table)
-  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>
-                                                      <table class="table table-sm table-hover table-bordered border-dark align-middle">
-                                                          <thead>
-                                                              <tr>
-                                                                  <th scope="col">From</th>
-                                                                  <th scope="col">Subject</th>
-                                                                  <th scope="col">Timestamp</th>
-                                                                  ${mailbox === 'sent'? '' : '<th scope="col">Actions</th>'}
-                                                              </tr>
-                                                          </thead>
-                                                          <tbody id="emails-table">
-                                                          </tbody>
-                                                      </table>`;
+  document.querySelector('#emails-view').innerHTML = `
+    <h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>
+    <table class="table table-sm table-hover table-bordered border-dark align-middle">
+        <thead>
+            <tr>
+                <th scope="col">From</th>
+                <th scope="col">Subject</th>
+                <th scope="col">Timestamp</th>
+                ${mailbox === 'sent'? '' : '<th scope="col">Actions</th>'}
+            </tr>
+        </thead>
+        <tbody id="emails-table">
+        </tbody>
+    </table>`;
 
   // fetch the corresponding mails from the API
   fetch(`/emails/${mailbox}`)

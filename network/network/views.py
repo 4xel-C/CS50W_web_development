@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse
@@ -33,7 +34,7 @@ def login_view(request):
     else:
         return render(request, "network/login.html")
 
-
+@login_required
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
@@ -67,15 +68,16 @@ def register(request):
 
 
 # --------------------------------------------------------API VIEWS
-def posts(request, filt=None):
+def posts(request, filter=None):
     """
     Request the API to POST a new post and return the id of the newly created post:
     url: /posts
     method: POST
     parameter: content
 
-    Request the API for all the posts available in the database. return posts paginated 10 by 10.
-    url: /posts
+    Request the API for all the posts available in the database and return a paginated response depending on which page is clicked
+    Accept a 'filter' url which can be 'tracked' to only fetch for the followed posts.
+    url: /posts/<filter>
     method: GET
     parameter: page (page number)
     """
@@ -104,12 +106,14 @@ def posts(request, filt=None):
         user = request.user if request.user.is_authenticated else None
 
         # query for the correct posts
-        if not filt:
+        if not filter:
             posts = Post.objects.all().order_by('-created')
-        elif filt == "following":
-            posts = Post.objects.filter(follows=user).all().order_by('-created')
+        elif not user:
+            return JsonResponse({'error': 'Authentication required.'}, status=401)
+        elif filter == 'tracked' and user:
+            posts = Post.objects.filter(follows=user).order_by('-created')
         else:
-            return JsonResponse({"error": "Invalid filter"}, status=400)
+            return JsonResponse({'error': 'Page not found'}, status=404)        
 
         # Get the page number if clicked on the application of give 1 by default
         try:
@@ -139,3 +143,42 @@ def posts(request, filt=None):
             ],
         }
         return JsonResponse(response_data)
+    
+@login_required
+def like(request, id):
+    user = request.user
+    
+    if request.method == 'POST':
+        try:
+            post = Post.objects.get(id=id)
+            
+            # Check if user already liked the post
+            if user in post.likes.all():
+                return JsonResponse({'error': 'You already like this post'}, status=400)
+            
+            # add the user to the likes of the post
+            post.likes.add(user)
+            return JsonResponse({'message': 'Post liked successfully', 'likesCount': post.like_count})
+
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post not found'}, status=404)
+    
+
+@login_required
+def unlike(request, id):
+    user = request.user
+    
+    try:
+        post = Post.objects.get(id=id)
+        
+        # if user does ont like the post
+        if user not in post.likes.all():
+            return JsonResponse({'error': 'No like for this post'})        
+        
+        # remove the like 
+        post.likes.remove(user)
+        return JsonResponse({'message': 'Post unliked successfully'})
+        
+    except Post.DoesNotExist:
+        return JsonResponse({'error': 'Post not found'}, status=404)
+        

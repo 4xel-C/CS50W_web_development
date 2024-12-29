@@ -15,7 +15,7 @@ class Post(models.Model):
     follows = models.ManyToManyField(User, related_name="followed_post", blank=True)
 
     def __str__(self):
-        return f"Post by {self.user.username}"
+        return f"Post by {self.user.username}"  
 
     # count the number of like of a post
     def like_count(self):
@@ -41,6 +41,14 @@ class Post(models.Model):
     
     # serialize the post
     def serialize(self, user):
+        """Serialize a Post as a Json Format.
+
+        Args:
+            user (str): User connected to the session to keep track of followed/liked posts
+
+        Returns:
+            Dict: Json format of the datas of 1 post.
+        """
         return {
             "id": self.id,
             "user": self.user.username,

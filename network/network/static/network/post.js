@@ -1,66 +1,50 @@
 // -----------------API request functions--------------------------------------------------
 
-function postNewPost(content) {
-    return new Promise((resolve, reject) => {
-        
-        // get the csrf token
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+async function postNewPost(content) {
 
-        $.ajax({
-            url: 'posts',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ 'content': content }),
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            },
-            success: (result) => {
-                console.log(result);
-                resolve(result); 
-            },
-            error: (error) => {
-                console.error(error);
-                reject(error);
-            }
-        });
-    });
+    // get the csrf token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+
 }
 
+// fetch datas for posts and return json datas
+async function fethPosts(filter=undefined){
+
+    try {
+        
+        // Get the post depending of the filter
+        if (!filter) {
+            const response = await fetch('/posts');
+        }
+        else if (filter === 'tracked'){
+            const response = await fetch(`/posts/${filter}`);
+        }
+
+        // Fetching error handling
+        if (!reponse.ok){
+            const errorData = await response.json();
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error.message || 'Unknown Error'}`);
+        }
+
+        const data = await response.json();
+        return data
+
+    } catch(error) {
+        console.error('Problem occured while fetching datas: ', error);
+        throw error;
+    }
+}
 
 // -----------------Helper functions--------------------------------------------------
 
-function loadPostPage(following=false){
-    /*
-    Load the post page with the all the posts by defaut or only fetching user's following posts.
-    */ 
-
-    // Clean the page
-    $('#postContainer').empty();
-
-    // Get the correct posts
-    $.ajax({
-        url: `${following? 'posts/following' : 'posts'}`,
-        method: 'GET',
-        success: (result) => {
-            console.log(result);
-            result.posts.forEach(post => {
-                const postElement = createPostElement(post);
-                $('#postContainer').append(postElement);
-            });
-        },
-        error: (error) => {
-            console.log(error);
-        }
-    });
-}
-
 function createPostElement(post){
     /*
-    Create a new post element with his listener.
+    Create a new element containing all the informations for a post.
     */
-    // Create the NewPost
-    var NewPost = $("<div class='col-lg-7'></div>");
-    NewPost.html(`
+    var NewPost = document.createElement('div');
+    NewPost.className = 'col-lg-7';
+    NewPost.innerHTML = `
         <div class="card mb-3">
             <div class="card-header">
                 ${post.author}
@@ -79,15 +63,30 @@ function createPostElement(post){
                 </div>
             </div>
         </div>
-    `);
-
-// TODO => PARAMETER LISTENER
-
+        `;
     return NewPost;
- }
 
+    // To Do => Add EventListener on each comments and buttons
+}
 
 // -----------------Main fonction--------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Create an Event Listener to the post button to post new posts
+    // document.querySelector('#postButton').addEventListener('click', () => {
+    //     pass
+    // })
+
+    // 
+    if (window.location.pathname === '/') {
+        loadPostPage();
+    } else if (window.location.pathname === '/following') {
+        loadPostPage(filter=true);
+    }
+
+});
+
+
 $(document).ready(()=> {
 
     // Create listener for POST button and reload the post page

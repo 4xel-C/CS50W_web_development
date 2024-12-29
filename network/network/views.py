@@ -181,4 +181,3 @@ def unlike(request, id):
         
     except Post.DoesNotExist:
         return JsonResponse({'error': 'Post not found'}, status=404)
-        

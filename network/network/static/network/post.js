@@ -4,13 +4,16 @@ async function postNewPost(content) {
     /*
     Post a new post o the API to save it to the data base and return the ID of the new created post. 
     */
-
     let response;
     try {
+        // get the CSRF token
+        const csrfToken = getCookie('csrftoken');
+
         response = await fetch('/posts', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify(content)
         })
@@ -19,6 +22,7 @@ async function postNewPost(content) {
             const errorData = await response.json();
             throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error.message || 'Unknown Error'}`)
         }
+        
         const data = await response.json()
         return data;
 
@@ -26,22 +30,27 @@ async function postNewPost(content) {
         console.error('Problem occured while fetching datas: ', error);
         throw error;
     }
-
-
 }
 
 async function fetchPosts(filter=undefined){
     /**
-     Fetch data for posts from API and return them as a Json;
+     Fetch data for posts from API and return them as a Json; Accept a scpecific post ID or a filter (eg: 'tracked'
+     to fetch all followed posts)
      */
+
+    // declare possible URLs to add urls if needed
+    const possibleUrl = ['tracked']
 
     let response;
     try {
-        // Get the post depending of the filter
+
+        // Get the post depending of the filter: if no filter specified, fetch all posts
         if (!filter) {
             response = await fetch('/posts');
         }
-        else if (filter === 'tracked'){
+
+        // if filter specified of specific ID is passed, fetch the corresponding post(s)
+        else if (filter === 'tracked' || Number.isInteger(filter)){
             response = await fetch(`/posts/${filter}`);
         } else {
             throw new Error('Invalid filter url')
@@ -63,6 +72,26 @@ async function fetchPosts(filter=undefined){
 }
 
 // -----------------Helper functions--------------------------------------------------
+
+function getCookie(name) {
+    /* 
+    Function to get specific cookies (for csrf validation)
+    */
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            
+            // Check for the right cookie
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
 function createPostElement(post){
     /*
@@ -97,15 +126,28 @@ function createPostElement(post){
 // -----------------Main fonction--------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {
 
+    // declare the querySelectors
+    const postButton = document.querySelector('#postButton');
+    const postContent = document.querySelector('#postContent');
+    const postContainer = document.querySelector('#postContainer')
+
     // Create an Event Listener to the post button to post new posts
-    // document.querySelector('#postButton').addEventListener('click', () => {
-    //     pass
-    // })
+    postButton.addEventListener('click', async () => {
+        let newId;
+        let newPost;
+        content = postContent.value;
+
+        // Post the new post and recuperate the id of the new created post
+        newId = await postNewPost(content);
+        newData = await fetchPosts(newId.postId);
+        
+        // Add the new post to the list
+        postContainer.appendChild(createPostElement(newData.post));
+    })
 
     // Fetch post data and create each post elements
     let data
-    const postContainer = document.querySelector('#postContainer')
-
+    
     if (window.location.pathname === '/') {
         data = await fetchPosts();
     } else if (window.location.pathname === '/following') {

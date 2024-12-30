@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse
@@ -89,7 +90,7 @@ def posts(request, filter=None):
             return JsonResponse({"error": "User not authenticated"}, status=401)
 
         # get the content of the post
-        content = json.loads(request.body).get("content", None)
+        content = json.loads(request.body)
         if not content:
             return JsonResponse({"error": "Post content is required"}, status=400)
 
@@ -144,7 +145,19 @@ def posts(request, filter=None):
             ],
         }
         return JsonResponse(response_data)
+
+def post_id(request, id):
+    """
+    Request the data base to get one specific post form his id.
+    """
+    try:
+        post = Post.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse({'error': 'Object does not exist.'}, status=404)
     
+    return JsonResponse({'post': post})
+        
+
 @login_required
 def like(request, id):
     user = request.user

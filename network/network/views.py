@@ -96,7 +96,8 @@ def posts(request, filter=None):
         # create the post
         post = Post(user=request.user, content=content)
         post.save()
-        response_data = {"message": "Post created successfully"}
+        response_data = {"message": "Post created successfully",
+                         "postId": post.id}
         return JsonResponse(response_data, status=201)
 
     # GET request to get all posts or favorites posts

@@ -1,28 +1,54 @@
 // -----------------API request functions--------------------------------------------------
 
 async function postNewPost(content) {
+    /*
+    Post a new post o the API to save it to the data base and return the ID of the new created post. 
+    */
 
-    // get the csrf token
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let response;
+    try {
+        response = await fetch('/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(content)
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error.message || 'Unknown Error'}`)
+        }
+        const data = await response.json()
+        return data;
+
+    } catch {
+        console.error('Problem occured while fetching datas: ', error);
+        throw error;
+    }
 
 
 }
 
-// fetch datas for posts and return json datas
-async function fethPosts(filter=undefined){
+async function fetchPosts(filter=undefined){
+    /**
+     Fetch data for posts from API and return them as a Json;
+     */
 
+    let response;
     try {
-        
         // Get the post depending of the filter
         if (!filter) {
-            const response = await fetch('/posts');
+            response = await fetch('/posts');
         }
         else if (filter === 'tracked'){
-            const response = await fetch(`/posts/${filter}`);
+            response = await fetch(`/posts/${filter}`);
+        } else {
+            throw new Error('Invalid filter url')
         }
 
         // Fetching error handling
-        if (!reponse.ok){
+        if (!response.ok){
             const errorData = await response.json();
             throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error.message || 'Unknown Error'}`);
         }
@@ -40,11 +66,12 @@ async function fethPosts(filter=undefined){
 
 function createPostElement(post){
     /*
-    Create a new element containing all the informations for a post.
+    Create a new element containing all the informations from a post.
     */
-    var NewPost = document.createElement('div');
-    NewPost.className = 'col-lg-7';
-    NewPost.innerHTML = `
+
+    var newPost = document.createElement('div');
+    newPost.className = 'col-lg-7';
+    newPost.innerHTML = `
         <div class="card mb-3">
             <div class="card-header">
                 ${post.author}
@@ -64,50 +91,29 @@ function createPostElement(post){
             </div>
         </div>
         `;
-    return NewPost;
-
-    // To Do => Add EventListener on each comments and buttons
+     return newPost;
 }
 
 // -----------------Main fonction--------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     // Create an Event Listener to the post button to post new posts
     // document.querySelector('#postButton').addEventListener('click', () => {
     //     pass
     // })
 
-    // 
+    // Fetch post data and create each post elements
+    let data
+    const postContainer = document.querySelector('#postContainer')
+
     if (window.location.pathname === '/') {
-        loadPostPage();
+        data = await fetchPosts();
     } else if (window.location.pathname === '/following') {
-        loadPostPage(filter=true);
+        data = await fetchPosts('tracked');
     }
 
-});
+    data.posts.forEach((post) => {
+        postContainer.appendChild(createPostElement(post));
+    })
 
-
-$(document).ready(()=> {
-
-    // Create listener for POST button and reload the post page
-    $('#postButton').click(() => {
-
-        // get the value of the body
-        const content = $('#formContent').val();
-        postNewPost(content)
-        .then(() => {
-
-            // reload the page with the new post
-            loadPostPage();
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-    });
-
-    if (window.location.pathname == '/') {
-        loadPostPage();
-    } else if (window.location.pathname == '/following') {
-        loadPostPage(following=true);
-    }
 });

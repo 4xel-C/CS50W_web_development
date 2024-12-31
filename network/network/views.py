@@ -83,10 +83,13 @@ def posts(request, filter=None):
     parameter: page (page number)
     """
 
+    # recuperate user if authenticated
+    user = request.user if request.user.is_authenticated else None
+
     # POST request to create a new post
     if request.method == "POST":
         # check if user is authenticated
-        if not request.user.is_authenticated:
+        if not user.is_authenticated:
             return JsonResponse({"error": "User not authenticated"}, status=401)
 
         # get the content of the post
@@ -95,17 +98,14 @@ def posts(request, filter=None):
             return JsonResponse({"error": "Post content is required"}, status=400)
 
         # create the post
-        post = Post(user=request.user, content=content)
+        post = Post(user=user, content=content)
         post.save()
         response_data = {"message": "Post created successfully",
-                         "postId": post.id}
+                         "post": post.serialize(user)}
         return JsonResponse(response_data, status=201)
 
     # GET request to get all posts or favorites posts
     elif request.method == "GET":
-        
-        # recuperate user if authenticated
-        user = request.user if request.user.is_authenticated else None
 
         # query for the correct posts
         if not filter:

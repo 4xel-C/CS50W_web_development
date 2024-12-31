@@ -3,6 +3,8 @@
 
 {% block body %}
 
+{% comment %} Alert if post {% endcomment %}
+
 <!-- Post form to post new posts if user is authenticated -->
 {% if user.is_authenticated and '/' == request.path %}
 <div class="container text-center col-lg-10 my-3">
@@ -13,7 +15,7 @@
         <form>
             {% csrf_token %}
             <textarea class="form-control mb-2" id="postContent" rows="4" name="postContent"></textarea>
-            <button class="btn btn-primary mb-2" id="postButton" type="button">
+            <button class="btn btn-primary mb-2" id="postButton" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample">
                 Post !
             </button>
         </form>

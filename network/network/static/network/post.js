@@ -2,7 +2,7 @@
 
 async function postNewPost(content) {
     /*
-    Post a new post o the API to save it to the data base and return the ID of the new created post. 
+    Post a new post o the API to save it to the data base and return the newly created post.
     */
     let response;
     try {
@@ -20,13 +20,13 @@ async function postNewPost(content) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error.message || 'Unknown Error'}`)
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error || 'Unknown Error'}`)
         }
-        
+
         const data = await response.json()
         return data;
 
-    } catch {
+    } catch (error) {
         console.error('Problem occured while fetching datas: ', error);
         throw error;
     }
@@ -100,6 +100,7 @@ function createPostElement(post){
 
     var newPost = document.createElement('div');
     newPost.className = 'col-lg-7';
+    newPost.classList.add('postCard');
     newPost.innerHTML = `
         <div class="card mb-3">
             <div class="card-header">
@@ -129,21 +130,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     // declare the querySelectors
     const postButton = document.querySelector('#postButton');
     const postContent = document.querySelector('#postContent');
-    const postContainer = document.querySelector('#postContainer')
+    const postContainer = document.querySelector('#postContainer');
+
 
     // Create an Event Listener to the post button to post new posts
     postButton.addEventListener('click', async () => {
-        let newId;
         let newPost;
         content = postContent.value;
 
+        if (!content){
+            console.error('Post content is empty!')
+            alert('The body of your post is empty!')
+            return;
+        }
+
         // Post the new post and recuperate the id of the new created post
-        newId = await postNewPost(content);
-        newData = await fetchPosts(newId.postId);
-        
-        // Add the new post to the list
-        postContainer.appendChild(createPostElement(newData.post));
-    })
+        newPost = await postNewPost(content);
+        newPostElement = createPostElement(newPost.post);
+
+        // Add the new post to the top of the list
+        postContainer.prepend(newPostElement);
+
+        // Check the number of postCards and delete the lasts if the numbers > 10
+        const postCards = postContainer.querySelectorAll('.postCard');
+        let numPosts = postCards.length;
+
+        while (numPosts > 10){
+            postCards[numPosts - 1].remove();
+            numPosts--;
+        }
+    });
 
     // Fetch post data and create each post elements
     let data

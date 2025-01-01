@@ -3,7 +3,8 @@
 
 {% block body %}
 
-{% comment %} Alert if post {% endcomment %}
+<!-- Success Alert -->
+<div id="alertContainer"></div>
 
 <!-- Post form to post new posts if user is authenticated -->
 {% if user.is_authenticated and '/' == request.path %}

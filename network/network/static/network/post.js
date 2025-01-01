@@ -72,6 +72,30 @@ async function fetchPosts(filter=undefined){
 }
 
 // -----------------Helper functions--------------------------------------------------
+function showAlert(message, type="success") {
+    /*
+    Create a bootstrap alert and append it to the alert container
+    */
+    const alert = document.createElement("div");
+    alert.className = `alert alert-${type} alert-dismissible`;
+    alert.role = "alert";
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    // Add the alert to the container
+    const alertContainer = document.getElementById("alertContainer");
+    alertContainer.appendChild(alert);
+
+    // Remove the alert after 5 seconds
+    setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        setTimeout(() => alert.remove(), 500);
+    }, 5000);
+}
+
 
 function getCookie(name) {
     /* 
@@ -103,8 +127,8 @@ function createPostElement(post){
     newPost.classList.add('postCard');
     newPost.innerHTML = `
         <div class="card mb-3">
-            <div class="card-header">
-                ${post.author}
+            <div class="card-header fw-bold">
+                ${post.user}
             </div>
             <div class="card-body">
                 <p class="card-text">${post.content}</p>
@@ -116,7 +140,7 @@ function createPostElement(post){
                 <div class="d-flex justify-content-between">
                     <button class="btn p-0"><i class="fa fa-heart postHeart"></i> <span class="postLikes">${post.likes}<span></button>
                     <button class="btn p-0 postComments">${post.comments} Comments</button>
-                    <div>${post.date}</div>
+                    <div>${post.created}</div>
                 </div>
             </div>
         </div>
@@ -124,7 +148,7 @@ function createPostElement(post){
      return newPost;
 }
 
-// -----------------Main fonction--------------------------------------------------
+// -----------------Main logic--------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {
 
     // declare the querySelectors
@@ -136,20 +160,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Create an Event Listener to the post button to post new posts
     postButton.addEventListener('click', async () => {
         let newPost;
-        content = postContent.value;
+        let content = postContent.value;
 
         if (!content){
             console.error('Post content is empty!')
-            alert('The body of your post is empty!')
+            showAlert('Post content is empty!', 'danger');
             return;
         }
 
-        // Post the new post and recuperate the id of the new created post
+        // Post the new post and recuperate the new created post
         newPost = await postNewPost(content);
-        newPostElement = createPostElement(newPost.post);
+        let newPostElement = createPostElement(newPost.post);
+
+        // Clear the post form content
+        postContent.value = '';
 
         // Add the new post to the top of the list
         postContainer.prepend(newPostElement);
+        showAlert('Post created successfully!', 'success');
 
         // Check the number of postCards and delete the lasts if the numbers > 10
         const postCards = postContainer.querySelectorAll('.postCard');

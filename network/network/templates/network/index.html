@@ -3,6 +3,9 @@
 
 {% block body %}
 
+<!-- Success Alert -->
+<div id="alertContainer"></div>
+
 <!-- Post form to post new posts if user is authenticated -->
 {% if user.is_authenticated and '/' == request.path %}
 <div class="container text-center col-lg-10 my-3">
@@ -12,8 +15,8 @@
     <div class="collapse border border-primary-subtle" id="collapseExample">
         <form>
             {% csrf_token %}
-            <textarea class="form-control mb-2" id="formContent" rows="4" name="postContent"></textarea>
-            <button class="btn btn-primary mb-2" id="postButton" type="button">
+            <textarea class="form-control mb-2" id="postContent" rows="4" name="postContent"></textarea>
+            <button class="btn btn-primary mb-2" id="postButton" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample">
                 Post !
             </button>
         </form>
@@ -29,6 +32,5 @@
 {% endblock %}
 
 {% block script %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'network/post.js' %}"></script>
 {% endblock %}

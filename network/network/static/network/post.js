@@ -1,69 +1,134 @@
 // -----------------API request functions--------------------------------------------------
 
-function postNewPost(content) {
-    return new Promise((resolve, reject) => {
-        
-        // get the csrf token
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+async function postNewPost(content) {
+    /*
+    Post a new post o the API to save it to the data base and return the newly created post.
+    */
+    let response;
+    try {
+        // get the CSRF token
+        const csrfToken = getCookie('csrftoken');
 
-        $.ajax({
-            url: 'posts',
+        response = await fetch('/posts', {
             method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ 'content': content }),
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
             },
-            success: (result) => {
-                console.log(result);
-                resolve(result); 
-            },
-            error: (error) => {
-                console.error(error);
-                reject(error);
-            }
-        });
-    });
+            body: JSON.stringify(content)
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error || 'Unknown Error'}`)
+        }
+
+        const data = await response.json()
+        return data;
+
+    } catch (error) {
+        console.error('Problem occured while fetching datas: ', error);
+        throw error;
+    }
+}
+
+async function fetchPosts(filter=undefined){
+    /**
+     Fetch data for posts from API and return them as a Json; Accept a scpecific post ID or a filter (eg: 'tracked'
+     to fetch all followed posts)
+     */
+
+    // declare possible URLs to add urls if needed
+    const possibleUrl = ['tracked']
+
+    let response;
+    try {
+
+        // Get the post depending of the filter: if no filter specified, fetch all posts
+        if (!filter) {
+            response = await fetch('/posts');
+        }
+
+        // if filter specified of specific ID is passed, fetch the corresponding post(s)
+        else if (filter === 'tracked' || Number.isInteger(filter)){
+            response = await fetch(`/posts/${filter}`);
+        } else {
+            throw new Error('Invalid filter url')
+        }
+
+        // Fetching error handling
+        if (!response.ok){
+            const errorData = await response.json();
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error.message || 'Unknown Error'}`);
+        }
+
+        const data = await response.json();
+        return data
+
+    } catch(error) {
+        console.error('Problem occured while fetching datas: ', error);
+        throw error;
+    }
+}
+
+// -----------------Helper functions--------------------------------------------------
+function showAlert(message, type="success") {
+    /*
+    Create a bootstrap alert and append it to the alert container
+    */
+    const alert = document.createElement("div");
+    alert.className = `alert alert-${type} alert-dismissible`;
+    alert.role = "alert";
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    // Add the alert to the container
+    const alertContainer = document.getElementById("alertContainer");
+    alertContainer.appendChild(alert);
+
+    // Remove the alert after 5 seconds
+    setTimeout(() => {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        setTimeout(() => alert.remove(), 500);
+    }, 5000);
 }
 
 
-// -----------------Helper functions--------------------------------------------------
-
-function loadPostPage(following=false){
-    /*
-    Load the post page with the all the posts by defaut or only fetching user's following posts.
-    */ 
-
-    // Clean the page
-    $('#postContainer').empty();
-
-    // Get the correct posts
-    $.ajax({
-        url: `${following? 'posts/following' : 'posts'}`,
-        method: 'GET',
-        success: (result) => {
-            console.log(result);
-            result.posts.forEach(post => {
-                const postElement = createPostElement(post);
-                $('#postContainer').append(postElement);
-            });
-        },
-        error: (error) => {
-            console.log(error);
+function getCookie(name) {
+    /* 
+    Function to get specific cookies (for csrf validation)
+    */
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            
+            // Check for the right cookie
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
-    });
+    }
+    return cookieValue;
 }
 
 function createPostElement(post){
     /*
-    Create a new post element with his listener.
+    Create a new element containing all the informations from a post.
     */
-    // Create the NewPost
-    var NewPost = $("<div class='col-lg-7'></div>");
-    NewPost.html(`
+
+    var newPost = document.createElement('div');
+    newPost.className = 'col-lg-7';
+    newPost.classList.add('postCard');
+    newPost.innerHTML = `
         <div class="card mb-3">
-            <div class="card-header">
-                ${post.author}
+            <div class="card-header fw-bold">
+                ${post.user}
             </div>
             <div class="card-body">
                 <p class="card-text">${post.content}</p>
@@ -75,40 +140,66 @@ function createPostElement(post){
                 <div class="d-flex justify-content-between">
                     <button class="btn p-0"><i class="fa fa-heart postHeart"></i> <span class="postLikes">${post.likes}<span></button>
                     <button class="btn p-0 postComments">${post.comments} Comments</button>
-                    <div>${post.date}</div>
+                    <div>${post.created}</div>
                 </div>
             </div>
         </div>
-    `);
+        `;
+     return newPost;
+}
 
-// TODO => PARAMETER LISTENER
+// -----------------Main logic--------------------------------------------------
+document.addEventListener('DOMContentLoaded', async () => {
 
-    return NewPost;
- }
+    // declare the querySelectors
+    const postButton = document.querySelector('#postButton');
+    const postContent = document.querySelector('#postContent');
+    const postContainer = document.querySelector('#postContainer');
 
 
-// -----------------Main fonction--------------------------------------------------
-$(document).ready(()=> {
+    // Create an Event Listener to the post button to post new posts
+    postButton.addEventListener('click', async () => {
+        let newPost;
+        let content = postContent.value;
 
-    // Create listener for POST button and reload the post page
-    $('#postButton').click(() => {
+        if (!content){
+            console.error('Post content is empty!')
+            showAlert('Post content is empty!', 'danger');
+            return;
+        }
 
-        // get the value of the body
-        const content = $('#formContent').val();
-        postNewPost(content)
-        .then(() => {
+        // Post the new post and recuperate the new created post
+        newPost = await postNewPost(content);
+        let newPostElement = createPostElement(newPost.post);
 
-            // reload the page with the new post
-            loadPostPage();
-        })
-        .catch((error) => {
-            console.log(error);
-        });
+        // Clear the post form content
+        postContent.value = '';
+
+        // Add the new post to the top of the list
+        postContainer.prepend(newPostElement);
+        showAlert('Post created successfully!', 'success');
+
+        // Check the number of postCards and delete the lasts if the numbers > 10
+        const postCards = postContainer.querySelectorAll('.postCard');
+        let numPosts = postCards.length;
+
+        while (numPosts > 10){
+            postCards[numPosts - 1].remove();
+            numPosts--;
+        }
     });
 
-    if (window.location.pathname == '/') {
-        loadPostPage();
-    } else if (window.location.pathname == '/following') {
-        loadPostPage(following=true);
+    // Fetch post data and create each post elements
+    let data
+    
+    if (window.location.pathname === '/') {
+        data = await fetchPosts();
+    } else if (window.location.pathname === '/following') {
+        data = await fetchPosts('tracked');
     }
+
+    data.posts.forEach((post) => {
+        postContainer.appendChild(createPostElement(post));
+    })
+
 });

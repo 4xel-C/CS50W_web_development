@@ -1,6 +1,6 @@
-// -----------------API request functions--------------------------------------------------
+// ---------------------------------API request functions--------------------------------------------------
 
-// Post a new post o the API to save it to the data base and return the newly created post.
+// Post a new post to the API to save it to the data base and return the newly created post.
 async function postNewPost(content) {
     let response;
     try {
@@ -18,26 +18,24 @@ async function postNewPost(content) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error || 'Unknown Error'}`)
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error?.message || 'Unknown Error'}`)
         }
 
         const data = await response.json()
         return data;
 
     } catch (error) {
-        console.error('Problem occured while fetching datas: ', error);
+        console.error('Problem occured while fetching datas: ', error.message);
         throw error;
     }
 }
 
 /*
-Fetch data for posts from API and return them as a Json; Accept a scpecific post ID or a filter (eg: 'tracked'
-to fetch all followed posts)
+Fetch data for posts from API and return them as a Json; Accept a specific post ID and read URL to fetch the correct data
 */
 async function fetchPosts(page=1){
 
     // declare possible URLs to add urls if needed
-    const possibleUrl = ['tracked']
     let filter = null;
 
     // Check URL to get the correct fetch
@@ -55,7 +53,7 @@ async function fetchPosts(page=1){
 
         // if filter specified of specific ID is passed, fetch the corresponding post(s)
         else if (filter === 'tracked' || Number.isInteger(filter)){
-            response = await fetch(`/posts/${filter}/?page=${page}`);
+            response = await fetch(`/posts/${filter}?page=${page}`);
         } else {
             throw new Error('Invalid filter url')
         }
@@ -70,12 +68,46 @@ async function fetchPosts(page=1){
         return data
 
     } catch(error) {
-        console.error('Problem occured while fetching datas: ', error);
+        console.error('Problem occured while fetching datas: ', error.message);
         throw error;
     }
 }
 
-// -----------------Helper functions--------------------------------------------------
+// Post a new like to the API
+async function like(id) {
+    let response;
+    try {
+        // get the CSRF token
+        const csrfToken = getCookie('csrftoken');
+
+        // POST the like
+        response = await fetch(`/posts/${id}/like`, {
+
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+
+        // Fetching error handling
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error?.message || 'Unknown Error'}`)
+        }
+
+        // Return the data response
+        const data = await response.json()
+        return data;
+
+    } catch (error) {
+        console.error('Post liking failed: ', error.message);
+        throw error;
+    }
+}
+
+// ----------------------------------Helper functions--------------------------------------------------
+
 // Create a bootstrap alert and append it to the alert container
 function showAlert(message, type="success") {
     const alert = document.createElement("div");
@@ -116,7 +148,9 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Create a new element containing all the informations from a post.
+// ----------------------------------------Builder functions--------------------------------------------------
+
+// Create a new element and his listener containing all the informations from a post.
 function createPostElement(post){
     var newPost = document.createElement('div');
     newPost.className = 'col-lg-7';
@@ -141,48 +175,52 @@ function createPostElement(post){
             </div>
         </div>
         `;
-     return newPost;
-}
-
-// Create a pagination button corresponding to the desired page number and add the corresponding event listener
-function createPageItem(pageNumber){
     
-    // Select the post container
-    const postContainer = document.querySelector('#postContainer')
-
-    // Get the pagination element, the 'next button' and create the new page
-    const pagination = document.querySelector('#pagination');
-    const nextButton = document.querySelector('#next-page');
-
-    const newPage = document.createElement('li');
-    newPage.classList.add('page-item');
-    newPage.innerHTML = `<a class="page-link" id="page-${pageNumber}">${pageNumber}</a>`
-
-    // Append the new page number to the pagination before the 'next' button
-    pagination.insertBefore(newPage, nextButton)
-
-    // create the event listener
-    newPage.addEventListener('click', async () => {
-        try {
-            data = await fetchPosts(pageNumber);
-        } catch(error) {
-            console.error('Problem occured while fetching datas: ', error);
-            return;
-        }
-
-        // Remove all posts from the page
-        postContainer.innerHTML='';
-
-        // load the new posts
-        data.posts.forEach((post) => {
-            postContainer.appendChild(createPostElement(post));
-        });
-
-        updatePaginationButtons(data.page, data.total_pages);
-    })
+    // check if the post is already liked
+    if (post.liked) {
+        newPost.querySelector('.postHeart').classList.add('text-danger');
     }
 
-// Update pagination boutton Previous and Next (disable or active) and page number
+    // Add the event listener to the like button
+    newPost.querySelector('.postHeart').addEventListener('click', async () => {
+        try {
+            const data = await like(post.id);
+            newPost.querySelector('.postLikes').textContent = data.likes;
+        } catch (error) {
+            console.error('Error while liking the post: ', error.message);
+            showAlert('Error while liking the post', 'danger');
+        }
+    });
+
+    return newPost;
+}
+
+// Create a pagination button corresponding to the desired page number and add the corresponding event listener if not already created
+function createPageItem(pageNumber){
+
+    const pagination = document.querySelector('#pagination');
+
+    // Check if the page number already exists
+    if (!pagination.querySelector(`#page-${pageNumber}`)) {
+        // Get the pagination element, the 'next button' and create the new page
+        
+        const nextButton = document.querySelector('#next-page');
+
+        const newPage = document.createElement('li');
+        newPage.classList.add('page-item');
+        newPage.innerHTML = `<a class="page-link" id="page-${pageNumber}">${pageNumber}</a>`
+
+        // Append the new page number to the pagination before the 'next' button
+        pagination.insertBefore(newPage, nextButton)
+
+        // create the event listener
+        newPage.addEventListener('click', async () => {
+            update_page(pageNumber);
+        });
+    }
+}
+
+// Update pagination boutton Previous and Next (disable or active) with data to set-up the next page and page number
 function updatePaginationButtons(page, total_pages){
     const nextButton = document.querySelector('#next-page');
     const previousButton = document.querySelector('#previous-page');
@@ -190,14 +228,18 @@ function updatePaginationButtons(page, total_pages){
     // refresh previous / next button
     if (page === 1){
         previousButton.classList.add('disabled');
+        previousButton.dataset.page = page;
     } else {
-        previousButton.classList.remove('disabled'); 
+        previousButton.classList.remove('disabled');
+        previousButton.dataset.page = page - 1;
     }
 
-    if (page < total_pages) {
-        nextButton.classList.remove('disabled');
-    } else {
+    if (page === total_pages) {
         nextButton.classList.add('disabled');
+        nextButton.dataset.page = page;
+    } else {
+        nextButton.classList.remove('disabled');
+        nextButton.dataset.page = page + 1;
     }
 
     // Make active the current page
@@ -211,95 +253,84 @@ function updatePaginationButtons(page, total_pages){
     }
 }
 
-// -----------------Main logic--------------------------------------------------
+// update the page by displaying the new posts and pagination
+async function update_page(page){
+
+        data = await fetchPosts(page);
+        console.log(data);
+
+        // Check if there are no posts to display
+        if (data.posts.length === 0){
+            postContainer.innerHTML = `<div class="alert alert-info text-center" role="alert">No Posts followed</div>`;
+            return;
+        }
+
+    // Remove all posts from the page
+    postContainer.innerHTML='';
+
+    // load the new posts
+    data.posts.forEach((post) => {
+        postContainer.appendChild(createPostElement(post));
+    });
+
+    // create pagination buttons
+    for (i = 1; i <= data.total_pages; i++){
+        createPageItem(i);
+    }
+
+    // update pagination buttons diplays
+    updatePaginationButtons(data.page, data.total_pages);
+}
+
+
+// ------------------------------------------------------------------------Main logic--------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {
+
+    // update the page with the first page
+    update_page(1);
 
     // declare the querySelectors
     const postButton = document.querySelector('#postButton');
     const postContent = document.querySelector('#postContent');
     const postContainer = document.querySelector('#postContainer');
+    const nextButton = document.querySelector('#next-page');
+    const previousButton = document.querySelector('#previous-page');
 
-    // Create an Event Listener to the post button to post new posts
-    postButton.addEventListener('click', async () => {
-        let newPost;
-        let content = postContent.value;
+    // POST new post => create an Event Listener to the post button to post new posts on main menu if the button exists
+    if (window.location.pathname === '/' && postButton) {
+        postButton.addEventListener('click', async () => {
+            let newPost;
+            let content = postContent.value;
 
-        if (!content){
-            console.error('Post content is empty!')
-            showAlert('Post content is empty!', 'danger');
-            return;
-        }
+            if (!content){
+                console.error('Post content is empty!')
+                showAlert('Post content is empty!', 'danger');
+                return;
+            }
 
-        // Post the new post and recuperate the new created post
-        newPost = await postNewPost(content);
-        let newPostElement = createPostElement(newPost.post);
+            // Post the new post to the API
+            await postNewPost(content);
 
-        // Clear the post form content
-        postContent.value = '';
+            // Clear the post form content
+            postContent.value = '';
 
-        // Add the new post to the top of the list
-        postContainer.prepend(newPostElement);
-        showAlert('Post created successfully!', 'success');
-
-        // Check the number of postCards and delete the lasts if the numbers > 10
-        const postCards = postContainer.querySelectorAll('.postCard');
-        let numPosts = postCards.length;
-
-        while (numPosts > 10){
-            postCards[numPosts - 1].remove();
-            numPosts--;
-        }
-    });
-
-    // Create event listener to previous / Next button
-    postButton.addEventListener('click', async () => {
-        let newPost;
-        let content = postContent.value;
-
-        if (!content){
-            console.error('Post content is empty!')
-            showAlert('Post content is empty!', 'danger');
-            return;
-        }
-
-        // Post the new post and recuperate the new created post
-        newPost = await postNewPost(content);
-        let newPostElement = createPostElement(newPost.post);
-
-        // Clear the post form content
-        postContent.value = '';
-
-        // Add the new post to the top of the list
-        postContainer.prepend(newPostElement);
-        showAlert('Post created successfully!', 'success');
-
-        // Check the number of postCards and delete the lasts if the numbers > 10
-        const postCards = postContainer.querySelectorAll('.postCard');
-        let numPosts = postCards.length;
-
-        while (numPosts > 10){
-            postCards[numPosts - 1].remove();
-            numPosts--;
-        }
-    });
-
-    // Fetch post data
-    let data;
-    data = await fetchPosts();
-
-    // create post element
-    data.posts.forEach((post) => {
-        postContainer.appendChild(createPostElement(post));
-    });
-
-    // create pagination button
-    const pages = data.total_pages;
-
-    for (i = 1; i <= pages; i++){
-        createPageItem(i);
+            // Display a success message and reload first page
+            showAlert('Post created successfully!', 'success');
+            update_page(1);
+        });
     }
 
-    // activate / deactivate previous button
-    updatePaginationButtons(data.page, data.total_pages);
+    // Next/Previous buttons event listener
+    nextButton.addEventListener('click', async () => {
+        if (!nextButton.classList.contains('disabled')){
+            update_page(parseInt(nextButton.dataset.page));
+        }
+    })
+
+    previousButton.addEventListener('click', async () => {
+        if (!previousButton.classList.contains('disabled'))
+            update_page(parseInt(previousButton.dataset.page));
+    });
+
 
 });

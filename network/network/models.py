@@ -44,7 +44,7 @@ class Post(models.Model):
         """Serialize a Post as a Json Format.
 
         Args:
-            user (str): User connected to the session to keep track of followed/liked posts
+            user (User): User connected to the session to keep track of followed/liked posts
 
         Returns:
             Dict: Json format of the datas of 1 post.

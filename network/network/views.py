@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator, EmptyPage
+from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -84,7 +84,7 @@ def posts(request, filter=None):
     """
 
     # recuperate user if authenticated
-    user = request.user if request.user.is_authenticated else None
+    user = request.user
 
     # POST request to create a new post
     if request.method == "POST":
@@ -93,7 +93,7 @@ def posts(request, filter=None):
             return JsonResponse({"error": "User not authenticated"}, status=401)
 
         # get the content of the post
-        content = json.loads(request.body)
+        content = json.loads(request.body.decode('utf-8'))
         if not content:
             return JsonResponse({"error": "Post content is required"}, status=400)
 
@@ -117,6 +117,7 @@ def posts(request, filter=None):
         else:
             return JsonResponse({'error': 'Page not found'}, status=404)        
 
+
         # Get the page number if clicked on the application of give 1 by default
         try:
             page = int(request.GET.get("page", 1))
@@ -127,11 +128,8 @@ def posts(request, filter=None):
         paginator = Paginator(posts, 10)
 
         # Extract the requested page by GET
-        try:
-            page_obj = paginator.page(page)
-        except EmptyPage:
-            return JsonResponse({"error": "Page not found"}, status=404)
-
+        page_obj = paginator.page(page)
+            
         # generate data response
         response_data = {
             "page": page_obj.number,
@@ -155,7 +153,7 @@ def post_id(request, id):
     except ObjectDoesNotExist:
         return JsonResponse({'error': 'Object does not exist.'}, status=404)
     
-    return JsonResponse({'post': post})
+    return JsonResponse({'post': post.serialize(request.user)}, status=200)
         
 
 @login_required
@@ -172,7 +170,8 @@ def like(request, id):
             
             # add the user to the likes of the post
             post.likes.add(user)
-            return JsonResponse({'message': 'Post liked successfully', 'likesCount': post.like_count})
+            print(post.likes)
+            return JsonResponse({'message': 'Post liked successfully', 'likesCount': post.likes})
 
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Post not found'}, status=404)
@@ -185,7 +184,7 @@ def unlike(request, id):
     try:
         post = Post.objects.get(id=id)
         
-        # if user does ont like the post
+        # if user does not like the post
         if user not in post.likes.all():
             return JsonResponse({'error': 'No like for this post'})        
         

@@ -1,9 +1,7 @@
 // -----------------API request functions--------------------------------------------------
 
+// Post a new post o the API to save it to the data base and return the newly created post.
 async function postNewPost(content) {
-    /*
-    Post a new post o the API to save it to the data base and return the newly created post.
-    */
     let response;
     try {
         // get the CSRF token
@@ -32,26 +30,32 @@ async function postNewPost(content) {
     }
 }
 
-async function fetchPosts(filter=undefined){
-    /**
-     Fetch data for posts from API and return them as a Json; Accept a scpecific post ID or a filter (eg: 'tracked'
-     to fetch all followed posts)
-     */
+/*
+Fetch data for posts from API and return them as a Json; Accept a scpecific post ID or a filter (eg: 'tracked'
+to fetch all followed posts)
+*/
+async function fetchPosts(page=1){
 
     // declare possible URLs to add urls if needed
     const possibleUrl = ['tracked']
+    let filter = null;
+
+    // Check URL to get the correct fetch
+    if (window.location.pathname === '/following') {
+        filter = 'tracked';
+    }
 
     let response;
     try {
 
         // Get the post depending of the filter: if no filter specified, fetch all posts
         if (!filter) {
-            response = await fetch('/posts');
+            response = await fetch(`/posts?page=${page}`);
         }
 
         // if filter specified of specific ID is passed, fetch the corresponding post(s)
         else if (filter === 'tracked' || Number.isInteger(filter)){
-            response = await fetch(`/posts/${filter}`);
+            response = await fetch(`/posts/${filter}/?page=${page}`);
         } else {
             throw new Error('Invalid filter url')
         }
@@ -72,10 +76,8 @@ async function fetchPosts(filter=undefined){
 }
 
 // -----------------Helper functions--------------------------------------------------
+// Create a bootstrap alert and append it to the alert container
 function showAlert(message, type="success") {
-    /*
-    Create a bootstrap alert and append it to the alert container
-    */
     const alert = document.createElement("div");
     alert.className = `alert alert-${type} alert-dismissible`;
     alert.role = "alert";
@@ -96,11 +98,8 @@ function showAlert(message, type="success") {
     }, 5000);
 }
 
-
+// Function to get specific cookies (for csrf validation)
 function getCookie(name) {
-    /* 
-    Function to get specific cookies (for csrf validation)
-    */
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
@@ -117,11 +116,8 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// Create a new element containing all the informations from a post.
 function createPostElement(post){
-    /*
-    Create a new element containing all the informations from a post.
-    */
-
     var newPost = document.createElement('div');
     newPost.className = 'col-lg-7';
     newPost.classList.add('postCard');
@@ -148,14 +144,80 @@ function createPostElement(post){
      return newPost;
 }
 
+// Create a pagination button corresponding to the desired page number and add the corresponding event listener
+function createPageItem(pageNumber){
+    
+    // Select the post container
+    const postContainer = document.querySelector('#postContainer')
+
+    // Get the pagination element, the 'next button' and create the new page
+    const pagination = document.querySelector('#pagination');
+    const nextButton = document.querySelector('#next-page');
+
+    const newPage = document.createElement('li');
+    newPage.classList.add('page-item');
+    newPage.innerHTML = `<a class="page-link" id="page-${pageNumber}">${pageNumber}</a>`
+
+    // Append the new page number to the pagination before the 'next' button
+    pagination.insertBefore(newPage, nextButton)
+
+    // create the event listener
+    newPage.addEventListener('click', async () => {
+        try {
+            data = await fetchPosts(pageNumber);
+        } catch(error) {
+            console.error('Problem occured while fetching datas: ', error);
+            return;
+        }
+
+        // Remove all posts from the page
+        postContainer.innerHTML='';
+
+        // load the new posts
+        data.posts.forEach((post) => {
+            postContainer.appendChild(createPostElement(post));
+        });
+
+        updatePaginationButtons(data.page, data.total_pages);
+    })
+    }
+
+// Update pagination boutton Previous and Next (disable or active) and page number
+function updatePaginationButtons(page, total_pages){
+    const nextButton = document.querySelector('#next-page');
+    const previousButton = document.querySelector('#previous-page');
+
+    // refresh previous / next button
+    if (page === 1){
+        previousButton.classList.add('disabled');
+    } else {
+        previousButton.classList.remove('disabled'); 
+    }
+
+    if (page < total_pages) {
+        nextButton.classList.remove('disabled');
+    } else {
+        nextButton.classList.add('disabled');
+    }
+
+    // Make active the current page
+    for (var i = 1; i <= total_pages; i++){
+        const pagebutton = document.querySelector(`#page-${i}`);
+        if (i === page) {
+            pagebutton.classList.add('active')
+        } else {
+            pagebutton.classList.remove('active')
+        }
+    }
+}
+
 // -----------------Main logic--------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {
 
     // declare the querySelectors
     const postButton = document.querySelector('#postButton');
     const postContent = document.querySelector('#postContent');
-    const postContainer = document.querySelector('#postContainer');
-
+    const postContainer = document.querySelector('#postContainer')
 
     // Create an Event Listener to the post button to post new posts
     postButton.addEventListener('click', async () => {
@@ -190,16 +252,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Fetch post data and create each post elements
-    let data
-    
-    if (window.location.pathname === '/') {
-        data = await fetchPosts();
-    } else if (window.location.pathname === '/following') {
-        data = await fetchPosts('tracked');
-    }
+    let data;
+    data = await fetchPosts();
 
+    // create post element
     data.posts.forEach((post) => {
         postContainer.appendChild(createPostElement(post));
-    })
+    });
+
+    // create pagination button
+    const pages = data.total_pages;
+
+    for (i = 1; i <= pages; i++){
+        createPageItem(i);
+    }
+
+    // activate / deactivate previous button
+    updatePaginationButtons(data.page, data.total_pages)
 
 });

@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // declare the querySelectors
     const postButton = document.querySelector('#postButton');
     const postContent = document.querySelector('#postContent');
-    const postContainer = document.querySelector('#postContainer')
+    const postContainer = document.querySelector('#postContainer');
 
     // Create an Event Listener to the post button to post new posts
     postButton.addEventListener('click', async () => {
@@ -251,7 +251,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Fetch post data and create each post elements
+    // Create event listener to previous / Next button
+    postButton.addEventListener('click', async () => {
+        let newPost;
+        let content = postContent.value;
+
+        if (!content){
+            console.error('Post content is empty!')
+            showAlert('Post content is empty!', 'danger');
+            return;
+        }
+
+        // Post the new post and recuperate the new created post
+        newPost = await postNewPost(content);
+        let newPostElement = createPostElement(newPost.post);
+
+        // Clear the post form content
+        postContent.value = '';
+
+        // Add the new post to the top of the list
+        postContainer.prepend(newPostElement);
+        showAlert('Post created successfully!', 'success');
+
+        // Check the number of postCards and delete the lasts if the numbers > 10
+        const postCards = postContainer.querySelectorAll('.postCard');
+        let numPosts = postCards.length;
+
+        while (numPosts > 10){
+            postCards[numPosts - 1].remove();
+            numPosts--;
+        }
+    });
+
+    // Fetch post data
     let data;
     data = await fetchPosts();
 
@@ -268,6 +300,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // activate / deactivate previous button
-    updatePaginationButtons(data.page, data.total_pages)
+    updatePaginationButtons(data.page, data.total_pages);
 
 });

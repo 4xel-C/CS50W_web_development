@@ -1,0 +1,34 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+<!-- Success Alert -->
+<div id="alertContainer"></div>
+
+<!-- Header section -->
+<div class="container">
+  <div class="row justify-content-center align-items-center">
+    <div class="col-md-6 d-flex">
+      <h2>Published by {{ post.user }}</h2>
+    </div>
+    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100">Follow</button></div>
+
+    <div class="col-md-8">
+      <hr class="mx-auto">
+    </div>
+  </div>
+
+  <!-- Body section -->
+  <div class="row justify-content-center mb-2">
+    <div class="col-md-8" id="post-content-detail">{{ post.content }}</div>
+  </div>
+
+</div>
+
+<!-- Comment Form to porst new comments if user is authenticated -->
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

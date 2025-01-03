@@ -6,29 +6,41 @@
 <!-- Success Alert -->
 <div id="alertContainer"></div>
 
-<!-- Header section -->
+<!-- Title of the post and following button -->
 <div class="container">
   <div class="row justify-content-center align-items-center">
     <div class="col-md-6 d-flex">
       <h2>Published by {{ post.user }}</h2>
     </div>
     <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100">Follow</button></div>
-
-    <div class="col-md-8">
-      <hr class="mx-auto">
-    </div>
+    <div class="col-md-8"><hr class="mx-auto"></div>
   </div>
 
-  <!-- Body section -->
+  <!-- Content of the post -->
   <div class="row justify-content-center mb-2">
     <div class="col-md-8" id="post-content-detail">{{ post.content }}</div>
+    <div class="col-md-8"><hr class="mx-auto"></div>
   </div>
 
+  <!-- form for comments if authenticated -->
+  {% if user.is_authenticated %}
+  <div class="row justify-content-center">
+    <div class="col-md-8"> 
+      <form>
+        <div class="mb-3">
+          <label for="commentForm" class="form-label text-body-secondary">Add a comment</label>
+          <textarea class="form-control mb-2" id="commentFrom" rows="3"></textarea>
+          <div class="text-end"><button class="btn btn-primary">Submit</button></div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
 </div>
-
 <!-- Comment Form to porst new comments if user is authenticated -->
 
 {% endblock %}
 
 {% block script %}
+<script src="{% static 'network/comment.js' %}"></script>
 {% endblock %}

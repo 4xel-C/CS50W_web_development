@@ -252,14 +252,17 @@ function createPostElement(post){
             try {
                 const data = await follow(post.id);
 
+                // if the post is unfollowed in the following menu, reload the first page
+                if (data.action === 'unfollow' && window.location.pathname === '/following') {
+                    update_page(1);
+                    showAlert('Post unfollowed', 'warning');
+                    return;
+
                 // if the post is followed, update the button aspect
-                if (data.action === 'follow'){
+                } else if (data.action === 'follow'){
                     followButton.innerHTML = 'Unfollow';
                     followButton.classList.add('active');
-                // if the post is unfollowed in the following menu, remove it and display a meesage
-                } else if (data.action === 'unfollow' && window.location.pathname === '/following') {
-                    newPost.remove();
-                    showAlert('Post unfollowed', 'warning')
+                    
                 } else if (data.action === 'unfollow') {
                     followButton.innerHTML = 'follow';
                     followButton.classList.remove('active');
@@ -332,6 +335,11 @@ function updatePaginationButtons(page, total_pages){
             pagebutton.classList.remove('active')
         }
     }
+
+    // remove the pagination buttons esceding the total pages
+    while (document.querySelector(`#page-${total_pages + 1}`)){
+        document.querySelector(`#page-${total_pages + 1}`).remove();
+    }
 }
 
 // update the page by displaying the new posts and pagination
@@ -379,7 +387,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // POST new post => create an Event Listener to the post button to post new posts on main menu if the button exists
     if (window.location.pathname === '/' && postButton) {
         postButton.addEventListener('click', async () => {
-            let newPost;
+
+            // Get the post content
             let content = postContent.value;
 
             if (!content){

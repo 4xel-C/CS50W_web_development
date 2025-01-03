@@ -18,5 +18,5 @@ urlpatterns = [
     path("posts/<int:id>", views.post_id, name="post_id"),
     path("posts/<int:id>/like", views.like, name="like"),
     path("posts/<int:id>/follow", views.follow_post, name="follow_post"),
-    # path("posts/<int:id>/comments", views.comments, name="comments"),
+    path("posts/<int:id>/comments", views.comments, name="comments"),
 ]

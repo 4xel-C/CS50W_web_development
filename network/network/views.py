@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.urls import reverse
 import json
 
-from .models import User, Post
+from .models import User, Post, Comment
 
 
 # --------------------------------------------------------VIEWS--------------------------------------------------------------------
@@ -85,7 +85,7 @@ def is_authenticated(request):
 
 def posts(request, filter=None):
     """
-    Request the API to POST a new post and return the id of the newly created post:
+    Request the API to POST a new post:
     url: /posts
     method: POST
     parameter: content
@@ -114,8 +114,7 @@ def posts(request, filter=None):
         # create the post
         post = Post(user=user, content=content)
         post.save()
-        response_data = {"message": "Post created successfully",
-                         "post": post.serialize(user)}
+        response_data = {"message": "Post created successfully"}
         return JsonResponse(response_data, status=201)
 
     # GET request to get all posts or favorites posts
@@ -222,3 +221,48 @@ def follow_post(request, id):
 
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Post not found'}, status=404)
+
+def comments(request, id):
+    """
+    Request the API to POST a new comment:
+    url: /posts/<id>/comments
+    method: POST
+    parameter: content
+
+    Request the API for all the comments of a post based on his id.
+    url: /posts/<id>/comments
+    method: GET
+    parameter: id (id of the post)
+
+    """
+
+    # If get request, return all comments of a post
+    if request.method == 'GET':
+        try:
+            comments = Comment.objects.get(post=id).all()
+            return JsonResponse({'comments': [comment.serialize() for comment in comments]}, status=200)
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Comments for this Post not found'}, status=404)
+    
+    # If post request, create a new comment
+    elif request.method == 'POST':
+        user = request.user
+        if not user.is_authenticated:
+            return JsonResponse({'error': 'Authentication required.'}, status=401)
+        
+        # get the content of the comment
+        content = json.loads(request.body.decode('utf-8'))
+        if not content:
+            return JsonResponse({"error": "Comment content is required"}, status=400)
+
+        # create the comment
+        try:
+            post = Post.objects.get(id=id)
+            comment = Comment(user=user, post=post, content=content)
+            comment.save()
+            response_data = {"message": "Comment created successfully"}
+            return JsonResponse(response_data, status=201)
+        
+        # if post does not exist
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post does not exist'}, status=404)

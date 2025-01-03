@@ -77,6 +77,12 @@ def detail(request, id):
 
 
 # --------------------------------------------------------API routes----------------------------------------------------------------
+def is_authenticated(request):
+    """
+    API call to check if user is authenticated or not
+    """
+    return JsonResponse({'is_authenticated': request.user.is_authenticated})
+
 def posts(request, filter=None):
     """
     Request the API to POST a new post and return the id of the newly created post:
@@ -164,12 +170,15 @@ def post_id(request, id):
     return JsonResponse({'post': post.serialize(request.user)}, status=200)
         
 
-@login_required
+
 def like(request, id):
     """
     Like a post based on it's id. If user already like the post, unlike it.
     """
     user = request.user
+
+    if not user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required.'}, status=401)
     
     if request.method == 'POST':
         try:
@@ -188,12 +197,14 @@ def like(request, id):
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Post not found'}, status=404)
         
-@login_required
+
 def follow_post(request, id):
     """
     Follow a post based on his id. If user already follow the post, unfollowit.
     """
     user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required.'}, status=401)
     
     if request.method == 'POST':
         try:

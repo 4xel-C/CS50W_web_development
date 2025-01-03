@@ -12,6 +12,7 @@ urlpatterns = [
     path("detail/<int:id>", views.detail, name="detail"),
 
     # API routes
+    path("auth", views.is_authenticated, name='is_authenticated'),
     path("posts", views.posts, name="all_posts"),
     path("posts/filter/<str:filter>", views.posts, name="filtered_post"),
     path("posts/<int:id>", views.post_id, name="post_id"),

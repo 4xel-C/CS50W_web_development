@@ -137,6 +137,17 @@ async function follow(id) {
     }
 }
 
+// function to test authentification of the user
+async function isAuthenticated(){
+    response = await fetch('/auth')
+    data = await response.json()
+        if(data.is_authenticated){
+            return true
+        } else {
+            return false
+        }
+}
+
 // ----------------------------------Helper functions--------------------------------------------------
 
 // Create a bootstrap alert and append it to the alert container
@@ -214,42 +225,51 @@ function createPostElement(post){
 
     // Add the event listener to the like button
     likeButton.addEventListener('click', async () => {
-        try {
-            const data = await like(post.id);
+        if (await isAuthenticated()){
+            try {
+                const data = await like(post.id);
 
-            // if the post is liked, update the class and the count accordingly:
-            likeButton.querySelector('.postLikes').textContent = data.likesCount;
-            if (data.action === 'like'){
-                likeButton.classList.add('text-danger');
-            } else if (data.action === 'unlike'){
-                likeButton.classList.remove('text-danger');
+                // if the post is liked, update the class and the count accordingly:
+                likeButton.querySelector('.postLikes').textContent = data.likesCount;
+                if (data.action === 'like'){
+                    likeButton.classList.add('text-danger');
+                } else if (data.action === 'unlike'){
+                    likeButton.classList.remove('text-danger');
+                }
+            } catch (error) {
+                console.error('Error while liking the post: ', error.message);
+                showAlert('Error while liking the post', 'danger');
             }
-        } catch (error) {
-            console.error('Error while liking the post: ', error.message);
-            showAlert('Error while liking the post', 'danger');
+        } else {
+            showAlert('You must be authenticated to like a post', 'danger');
         }
     });
+        
 
     // add the event listener to the follow button
     followButton.addEventListener('click', async () => {
-        try {
-            const data = await follow(post.id);
+        if (await isAuthenticated()){
+            try {
+                const data = await follow(post.id);
 
-            // if the post is followed, update the button aspect
-            if (data.action === 'follow'){
-                followButton.innerHTML = 'Unfollow';
-                followButton.classList.add('active');
-            // if the post is unfollowed in the following menu, remove it and display a meesage
-            } else if (data.action === 'unfollow' && window.location.pathname === '/following') {
-                newPost.remove();
-                showAlert('Post unfollowed', 'warning')
-            } else if (data.action === 'unfollow') {
-                followButton.innerHTML = 'follow';
-                followButton.classList.remove('active');
+                // if the post is followed, update the button aspect
+                if (data.action === 'follow'){
+                    followButton.innerHTML = 'Unfollow';
+                    followButton.classList.add('active');
+                // if the post is unfollowed in the following menu, remove it and display a meesage
+                } else if (data.action === 'unfollow' && window.location.pathname === '/following') {
+                    newPost.remove();
+                    showAlert('Post unfollowed', 'warning')
+                } else if (data.action === 'unfollow') {
+                    followButton.innerHTML = 'follow';
+                    followButton.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error while following the post: ', error.message);
+                showAlert('Error while following the post', 'danger');
             }
-        } catch (error) {
-            console.error('Error while following the post: ', error.message);
-            showAlert('Error while following the post', 'danger');
+        } else {
+            showAlert('You must be authenticated to follow a post', 'danger');
         }
     });
 

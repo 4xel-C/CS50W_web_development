@@ -105,12 +105,44 @@ async function like(id) {
     }
 }
 
+// Follow a post by sending a post request to the API
+async function follow(id) {
+    let response;
+    try {
+        // get the CSRF token
+        const csrfToken = getCookie('csrftoken');
+
+        // POST the like
+        response = await fetch(`/posts/${id}/follow`, {
+
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+
+        // Fetching error handling
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error}`)
+        }
+
+        // Return the data response
+        const data = await response.json()
+        return data;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 // ----------------------------------Helper functions--------------------------------------------------
 
 // Create a bootstrap alert and append it to the alert container
 function showAlert(message, type="success") {
     const alert = document.createElement("div");
-    alert.className = `alert alert-${type} alert-dismissible`;
+    alert.className = `alert alert-${type} alert-dismissible text-center`;
     alert.role = "alert";
     alert.innerHTML = `
         ${message}
@@ -162,12 +194,12 @@ function createPostElement(post){
             <div class="card-body">
                 <p class="card-text">${post.content}</p>
                 <div class="container text-end">
-                    <button class="btn p-1 btn-outline-primary followButton">${post.followed? 'Unfollow' : 'Follow'}</button>
+                    <button class="btn p-1 btn-outline-primary follow-button ${post.followed? 'active' : ''}">${post.followed? 'Unfollow' : 'Follow'}</button>
                 </div>
             </div>
             <div class="card-footer text-body-secondary">
                 <div class="d-flex justify-content-between">
-                    <button class="btn p-0 like-button"><i class="fa fa-heart postHeart"></i> <span class="postLikes">${post.likes}<span></button>
+                    <button class="btn p-0 like-button ${post.liked? 'text-danger' : ''}"><i class="fa fa-heart postHeart"></i> <span class="postLikes">${post.likes}<span></button>
                     <button class="btn p-0 postComments">${post.comments} Comments</button>
                     <div>${post.created}</div>
                 </div>
@@ -175,26 +207,49 @@ function createPostElement(post){
         </div>
         `;
     
-    // check if the post is already liked
-    if (post.liked) {
-        newPost.querySelector('.like-button').classList.add('text-danger');
-    }
+    // Event listeners
+    const likeButton =  newPost.querySelector('.like-button');
+    const followButton = newPost.querySelector('.follow-button');
 
     // Add the event listener to the like button
-    newPost.querySelector('.like-button').addEventListener('click', async () => {
+    likeButton.addEventListener('click', async () => {
         try {
             const data = await like(post.id);
 
             // if the post is liked, update the class and the count accordingly:
-            newPost.querySelector('.postLikes').textContent = data.likesCount;
+            likeButton.querySelector('.postLikes').textContent = data.likesCount;
             if (data.action === 'like'){
-                newPost.querySelector('.like-button').classList.add('text-danger');
+                likeButton.classList.add('text-danger');
             } else if (data.action === 'unlike'){
-                newPost.querySelector('.like-button').classList.remove('text-danger');
+                likeButton.classList.remove('text-danger');
             }
         } catch (error) {
             console.error('Error while liking the post: ', error.message);
             showAlert('Error while liking the post', 'danger');
+        }
+    });
+
+    // add the event listener to the follow button
+    followButton.addEventListener('click', async () => {
+        try {
+            const data = await follow(post.id);
+            console.log(data)
+
+            // if the post is followed, update the button aspect
+            if (data.action === 'follow'){
+                followButton.innerHTML = 'Unfollow';
+                followButton.classList.add('active');
+            // if the post is unfollowed in the following menu, remove it and display a meesage
+            } else if (data.action === 'unfollow' && window.location.pathname === '/following') {
+                newPost.remove();
+                showAlert('Post unfollowed', 'warning')
+            } else if (data.action === 'unfollow') {
+                followButton.innerHTML = 'follow';
+                followButton.classList.remove('active');
+            }
+        } catch (error) {
+            console.error('Error while following the post: ', error.message);
+            showAlert('Error while following the post', 'danger');
         }
     });
 
@@ -263,7 +318,6 @@ function updatePaginationButtons(page, total_pages){
 async function update_page(page){
 
         data = await fetchPosts(page);
-        console.log(data);
 
         // Check if there are no posts to display
         if (data.posts.length === 0){

@@ -159,7 +159,7 @@ def post_id(request, id):
 @login_required
 def like(request, id):
     """
-    POST a like to the data base on a POST id. If user already like the post, unlike it.
+    Like a post based on it's id. If user already like the post, unlike it.
     """
     user = request.user
     
@@ -176,6 +176,30 @@ def like(request, id):
             else:
                 post.likes.add(user)
                 return JsonResponse({'message': 'Post liked successfully', 'likesCount': post.likes.count(), 'action': 'like'})
+
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post not found'}, status=404)
+        
+@login_required
+def follow_post(request, id):
+    """
+    Follow a post based on his id. If user already follow the post, unfollowit.
+    """
+    user = request.user
+    
+    if request.method == 'POST':
+        try:
+            post = Post.objects.get(id=id)
+            
+            # Check if user already follow the post, and if so, unfollow
+            if user in post.follows.all():
+                post.follows.remove(user)
+                return JsonResponse({'message': 'Post unfollowed successfully', 'action': 'unfollow'})
+            
+            # else make the user follow the post
+            else:
+                post.follows.add(user)
+                return JsonResponse({'message': 'Post followed successfullly', 'action': 'follow'})
 
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Post not found'}, status=404)

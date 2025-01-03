@@ -11,7 +11,7 @@ import json
 from .models import User, Post
 
 
-# --------------------------------------------------------VIEWS
+# --------------------------------------------------------VIEWS--------------------------------------------------------------------
 def index(request):
     return render(request, "network/index.html")
 
@@ -67,8 +67,16 @@ def register(request):
     else:
         return render(request, "network/register.html")
 
+def detail(request, id):
+    # render the detail page of a post passing the post as context for displaying details.
+    post = Post.objects.get(id=id)
+    
+    return render(request, "network/detail.html", {
+        'post': post
+    })
 
-# --------------------------------------------------------API VIEWS
+
+# --------------------------------------------------------API routes----------------------------------------------------------------
 def posts(request, filter=None):
     """
     Request the API to POST a new post and return the id of the newly created post:

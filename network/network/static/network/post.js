@@ -183,6 +183,7 @@ function getCookie(name) {
 
 // Create a new element and his listener containing all the informations from a post.
 function createPostElement(post){
+    // Create the new element
     var newPost = document.createElement('div');
     newPost.className = 'col-lg-7';
     newPost.classList.add('postCard');
@@ -200,7 +201,7 @@ function createPostElement(post){
             <div class="card-footer text-body-secondary">
                 <div class="d-flex justify-content-between">
                     <button class="btn p-0 like-button ${post.liked? 'text-danger' : ''}"><i class="fa fa-heart postHeart"></i> <span class="postLikes">${post.likes}<span></button>
-                    <button class="btn p-0 postComments">${post.comments} Comments</button>
+                    <a href="/detail/${post.id}"><button class="btn p-0 postComments">${post.comments} Comments</button></a>
                     <div>${post.created}</div>
                 </div>
             </div>
@@ -233,7 +234,6 @@ function createPostElement(post){
     followButton.addEventListener('click', async () => {
         try {
             const data = await follow(post.id);
-            console.log(data)
 
             // if the post is followed, update the button aspect
             if (data.action === 'follow'){

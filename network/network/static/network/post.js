@@ -53,7 +53,7 @@ async function fetchPosts(page=1){
 
         // if filter specified of specific ID is passed, fetch the corresponding post(s)
         else if (filter === 'tracked' || Number.isInteger(filter)){
-            response = await fetch(`/posts/${filter}?page=${page}`);
+            response = await fetch(`/posts/filter/${filter}?page=${page}`);
         } else {
             throw new Error('Invalid filter url')
         }
@@ -93,7 +93,7 @@ async function like(id) {
         // Fetching error handling
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error?.message || 'Unknown Error'}`)
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error}`)
         }
 
         // Return the data response
@@ -101,7 +101,6 @@ async function like(id) {
         return data;
 
     } catch (error) {
-        console.error('Post liking failed: ', error.message);
         throw error;
     }
 }
@@ -168,7 +167,7 @@ function createPostElement(post){
             </div>
             <div class="card-footer text-body-secondary">
                 <div class="d-flex justify-content-between">
-                    <button class="btn p-0"><i class="fa fa-heart postHeart"></i> <span class="postLikes">${post.likes}<span></button>
+                    <button class="btn p-0 like-button"><i class="fa fa-heart postHeart"></i> <span class="postLikes">${post.likes}<span></button>
                     <button class="btn p-0 postComments">${post.comments} Comments</button>
                     <div>${post.created}</div>
                 </div>
@@ -178,14 +177,21 @@ function createPostElement(post){
     
     // check if the post is already liked
     if (post.liked) {
-        newPost.querySelector('.postHeart').classList.add('text-danger');
+        newPost.querySelector('.like-button').classList.add('text-danger');
     }
 
     // Add the event listener to the like button
-    newPost.querySelector('.postHeart').addEventListener('click', async () => {
+    newPost.querySelector('.like-button').addEventListener('click', async () => {
         try {
             const data = await like(post.id);
-            newPost.querySelector('.postLikes').textContent = data.likes;
+
+            // if the post is liked, update the class and the count accordingly:
+            newPost.querySelector('.postLikes').textContent = data.likesCount;
+            if (data.action === 'like'){
+                newPost.querySelector('.like-button').classList.add('text-danger');
+            } else if (data.action === 'unlike'){
+                newPost.querySelector('.like-button').classList.remove('text-danger');
+            }
         } catch (error) {
             console.error('Error while liking the post: ', error.message);
             showAlert('Error while liking the post', 'danger');

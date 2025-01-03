@@ -158,39 +158,24 @@ def post_id(request, id):
 
 @login_required
 def like(request, id):
+    """
+    POST a like to the data base on a POST id. If user already like the post, unlike it.
+    """
     user = request.user
     
     if request.method == 'POST':
         try:
             post = Post.objects.get(id=id)
             
-            # Check if user already liked the post
+            # Check if user already liked the post and unlike the post if so
             if user in post.likes.all():
-                return JsonResponse({'error': 'You already like this post'}, status=400)
+                post.likes.remove(user)
+                return JsonResponse({'message': 'Post unliked successfully', 'likesCount': post.likes.count(), 'action': 'unlike'})
             
-            # add the user to the likes of the post
-            post.likes.add(user)
-            print(post.likes)
-            return JsonResponse({'message': 'Post liked successfully', 'likesCount': post.likes})
+            # else add the user to the likes of the post
+            else:
+                post.likes.add(user)
+                return JsonResponse({'message': 'Post liked successfully', 'likesCount': post.likes.count(), 'action': 'like'})
 
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Post not found'}, status=404)
-    
-
-@login_required
-def unlike(request, id):
-    user = request.user
-    
-    try:
-        post = Post.objects.get(id=id)
-        
-        # if user does not like the post
-        if user not in post.likes.all():
-            return JsonResponse({'error': 'No like for this post'})        
-        
-        # remove the like 
-        post.likes.remove(user)
-        return JsonResponse({'message': 'Post unliked successfully'})
-        
-    except Post.DoesNotExist:
-        return JsonResponse({'error': 'Post not found'}, status=404)

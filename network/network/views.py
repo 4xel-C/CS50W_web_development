@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -68,11 +68,14 @@ def register(request):
         return render(request, "network/register.html")
 
 def detail(request, id):
+
     # render the detail page of a post passing the post as context for displaying details.
     post = Post.objects.get(id=id)
+    is_followed = post.is_followed(request.user)
     
     return render(request, "network/detail.html", {
-        'post': post
+        'post': post,
+        'isFollowed': is_followed,
     })
 
 
@@ -123,7 +126,7 @@ def posts(request, filter=None):
         # query for the correct posts
         if not filter:
             posts = Post.objects.all().order_by('-created')
-        elif not user:
+        elif not user.is_authenticated:
             return JsonResponse({'error': 'Authentication required.'}, status=401)
         elif filter == 'tracked' and user:
             posts = Post.objects.filter(follows=user).order_by('-created')
@@ -141,7 +144,10 @@ def posts(request, filter=None):
         paginator = Paginator(posts, 10)
 
         # Extract the requested page by GET
-        page_obj = paginator.page(page)
+        try:
+            page_obj = paginator.page(page)
+        except EmptyPage:
+            return JsonResponse({'error': 'Page not found'}, status=404)
             
         # generate data response
         response_data = {
@@ -238,8 +244,20 @@ def comments(request, id):
 
     # If get request, return all comments of a post
     if request.method == 'GET':
+
+        # define the page size and get the page number
+        page_size = 10
         try:
-            comments = Comment.objects.get(post=id).all()
+            page = int(request.GET.get('page', None))
+        except ValueError:
+            return JsonResponse({'error': 'Page not found'}, status=404)
+
+        # get the comments depending if a page is requested or not
+        try:
+            if page:
+                comments = Comment.objects.filter(post=id).all()[(page - 1) * page_size : page * page_size]
+            else:
+                comments = Comment.objects.filter(post=id).all()
             return JsonResponse({'comments': [comment.serialize() for comment in comments]}, status=200)
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Comments for this Post not found'}, status=404)
@@ -260,7 +278,8 @@ def comments(request, id):
             post = Post.objects.get(id=id)
             comment = Comment(user=user, post=post, content=content)
             comment.save()
-            response_data = {"message": "Comment created successfully"}
+            response_data = {"message": "Comment created successfully", 
+                             "comment": comment.serialize()}
             return JsonResponse(response_data, status=201)
         
         # if post does not exist

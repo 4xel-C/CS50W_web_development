@@ -42,27 +42,32 @@ let pageCounter = 1;
 
 // assign the queryselectors and get the id of the post
 const postContainer = document.querySelector('#postContainer');
+const postAuthor = document.querySelector('#postAuthor');
 const submitButton = document.querySelector('#submitComment');
 const commentInput = document.querySelector('#commentInput');
 const commentForm = document.querySelector('#commentForm');
 const commentsContainer = document.querySelector('#commentsContainer');
 const followButton = document.querySelector('#followButton');
+
+// extract the id from the datasets
 const postId = postContainer.dataset.postid;
+const userId = postAuthor.dataset.userid;
 
 document.addEventListener('DOMContentLoaded', async () => {
 
     // Follow buton
     followButton.addEventListener('click', async () => {
         try {
-            const response = await follow(postId);
+            console.log(userId)
+            const response = await follow(userId);
 
             // update the follow button
             if (response.action == 'follow') {
-                showAlert('You now follow this post', 'success');
+                showAlert('You are now following this user', 'success');
                 followButton.innerHTML = 'Unfollow';
             } else if (response.action == 'unfollow') {
                 followButton.innerHTML = 'Follow';
-                showAlert('You are not following this post anymore', 'warning');
+                showAlert('You are not following this user anymore', 'warning');
             }
             
         } catch (error) {
@@ -71,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // Comment form submission
-    commentForm.addEventListener('submit', async (event) => {
+    commentForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const body = commentInput.value;
 
@@ -88,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // enable / disable the submit button
-    commentInput.addEventListener('input', () => {
+    commentInput?.addEventListener('input', () => {
         if (commentInput.value) {
             submitButton.disabled = false;
         } else {

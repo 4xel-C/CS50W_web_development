@@ -33,6 +33,12 @@ function createPostElement(post){
     const likeButton =  newPost.querySelector('.like-button');
     const followButton = newPost.querySelector('.follow-button');
 
+    // deactivate the follow button if the user is the author of the post
+    if (post.is_author){
+        followButton.disabled = true;
+    }
+
+
     // Add the event listener to the like button
     likeButton.addEventListener('click', async () => {
         if (await isAuthenticated()){
@@ -60,26 +66,20 @@ function createPostElement(post){
     followButton.addEventListener('click', async () => {
         if (await isAuthenticated()){
             try {
-                const data = await follow(post.id);
-
+                const data = await follow(post.userId);
+                
                 // if the post is unfollowed in the following menu, reload the first page
-                if (data.action === 'unfollow' && window.location.pathname === '/following') {
-                    update_page(1);
-                    showAlert('Post unfollowed', 'warning');
-                    return;
+                if (data.action === 'unfollow') {
+                    showAlert(`You are not following ${post.user} anymore!`, 'warning');
+                } else {
+                    showAlert(`You are following ${post.user}!`, 'success');
 
-                // if the post is followed, update the button aspect
-                } else if (data.action === 'follow'){
-                    followButton.innerHTML = 'Unfollow';
-                    followButton.classList.add('active');
-                    
-                } else if (data.action === 'unfollow') {
-                    followButton.innerHTML = 'follow';
-                    followButton.classList.remove('active');
                 }
+                update_page(1);
+                
             } catch (error) {
                 console.error('Error while following the post: ', error.message);
-                showAlert('Error while following the post', 'danger');
+                showAlert(`${error.message}`, 'danger');
             }
         } else {
             showAlert('You must be authenticated to follow a post', 'danger');
@@ -96,8 +96,8 @@ function createPageItem(pageNumber){
 
     // Check if the page number already exists
     if (!pagination.querySelector(`#page-${pageNumber}`)) {
+
         // Get the pagination element, the 'next button' and create the new page
-        
         const nextButton = document.querySelector('#next-page');
 
         const newPage = document.createElement('li');
@@ -140,16 +140,20 @@ function updatePaginationButtons(page, total_pages){
     for (var i = 1; i <= total_pages; i++){
         const pagebutton = document.querySelector(`#page-${i}`);
         if (i === page) {
-            pagebutton.classList.add('active')
+            pagebutton?.classList.add('active')
         } else {
-            pagebutton.classList.remove('active')
+            pagebutton?.classList.remove('active')
         }
     }
 
-    // remove the pagination buttons esceding the total pages
-    while (document.querySelector(`#page-${total_pages + 1}`)){
-        document.querySelector(`#page-${total_pages + 1}`).remove();
-    }
+    // Remove the pagination buttons exceeding the total pages
+    let excess_counter = 1;
+    let excess_page = document.querySelector(`#page-${total_pages + excess_counter}`);
+    while (excess_page !== null) {
+        excess_page.remove();
+        excess_counter++;
+        excess_page = document.querySelector(`#page-${total_pages + excess_counter}`);
+}
 }
 
 // update the page by displaying the new posts and pagination
@@ -159,7 +163,8 @@ async function update_page(page){
     console.log(data);
     // Check if there are no posts to display
     if (data.posts.length === 0){
-        postContainer.innerHTML = `<div class="alert alert-info text-center" role="alert">No Posts followed</div>`;
+        postContainer.innerHTML = `<div class="alert alert-info text-center" role="alert">No posts to display</div>`;
+        updatePaginationButtons(data.page, data.total_pages);
         return;
     }
 
@@ -190,7 +195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // declare the querySelectors
     const postButton = document.querySelector('#postButton');
     const postContent = document.querySelector('#postContent');
-    const postContainer = document.querySelector('#postContainer');
     const nextButton = document.querySelector('#next-page');
     const previousButton = document.querySelector('#previous-page');
 

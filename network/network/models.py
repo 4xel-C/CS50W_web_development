@@ -12,7 +12,6 @@ class Post(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name="liked_post", blank=True)
-    follows = models.ManyToManyField(User, related_name="followed_post", blank=True)
 
     def __str__(self):
         return f"Post by {self.user.username}"
@@ -31,13 +30,16 @@ class Post(models.Model):
     # count the number of comments of a post
     def comments_count(self):
         return self.comments.count()
-
-    # return True if the user has followed the post
+    
+    #  specify if the post was created by a followed user
     def is_followed(self, user):
-        if user is None:
+        if not user.is_authenticated or self.user is None:
             return False
-        else:
-            return self.follows.filter(id=user.id).exists()
+        return Follower.objects.filter(user=user, followed=self.user).exists()
+    
+    # Return True if the current user is the author of the post
+    def is_author(self, user):
+        return self.user == user
 
     # serialize the post
     def serialize(self, user):
@@ -52,13 +54,15 @@ class Post(models.Model):
         return {
             "id": self.id,
             "user": self.user.username,
+            "userId": self.user.id,
             "content": self.content,
             "created": self.created.strftime("%b %d %Y, %I:%M %p"),
             "updated": self.updated.strftime("%b %d %Y, %I:%M %p"),
             "likes": self.like_count(),
             "comments": self.comments_count(),
-            "followed": self.is_followed(user) if user else False,
-            "liked": self.is_liked(user) if user else False,
+            "liked": self.is_liked(user),
+            "followed": self.is_followed(user),
+            "is_author": self.is_author(user)
         }
 
 
@@ -78,3 +82,23 @@ class Comment(models.Model):
             "content": self.content,
             "date": self.created.strftime("%b %d %Y, %I:%M %p"),
         }
+
+class Follower(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")
+    followed = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.followed.username}"
+
+    @staticmethod
+    def is_followed(user, followed):
+        """Check if an user is followed by the current user."""
+        if user is None or followed is None:
+            return False
+        return Follower.objects.filter(user=user, followed=followed).exists()
+    
+    # Add a unique constraint to avoid duplicate following
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'followed'], name='unique_user_followed')
+        ]

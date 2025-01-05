@@ -7,6 +7,12 @@
 <div id="alertContainer"></div>
 
 <!-- Post form to post new posts if user is authenticated -->
+{% if 'following' in request.path %}
+<h1>Followed users</h1>
+{% else %}
+<h1>All posts</h1>
+{% endif %}
+
 {% if user.is_authenticated and '/' == request.path %}
 <div class="container text-center col-lg-10 my-3">
     <button class="btn btn-primary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
@@ -24,7 +30,7 @@
 </div>
 {% endif %}
 
-<!-- Card layout for posts -->
+<!-- Card container for posts -->
     <div class="row justify-content-center" id="postContainer">
     </div>
 

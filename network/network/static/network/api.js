@@ -146,7 +146,7 @@ export async function like(id) {
     }
 }
 
-// Follow a post by sending a post request to the API
+// Follow a user by sending a post request to the API
 export async function follow(id) {
     let response;
     try {
@@ -154,7 +154,7 @@ export async function follow(id) {
         const csrfToken = getCookie('csrftoken');
 
         // POST the like
-        response = await fetch(`/posts/${id}/follow`, {
+        response = await fetch(`/user/${id}/follow`, {
 
             method: 'POST',
             headers: {
@@ -166,7 +166,7 @@ export async function follow(id) {
         // Fetching error handling
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error}`)
+            throw new Error(`HTTP error: ${response.status}, ${errorData.error}`)
         }
 
         // Return the data response

@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.urls import reverse
 import json
 
-from .models import User, Post, Comment
+from .models import User, Post, Comment, Follower
 
 
 # --------------------------------------------------------VIEWS--------------------------------------------------------------------
@@ -71,11 +71,12 @@ def detail(request, id):
 
     # render the detail page of a post passing the post as context for displaying details.
     post = Post.objects.get(id=id)
-    is_followed = post.is_followed(request.user)
+    is_followed = Follower.is_followed(request.user, post.user) if request.user.is_authenticated else False
     
     return render(request, "network/detail.html", {
         'post': post,
         'isFollowed': is_followed,
+        'is_author': post.is_author(request.user)
     })
 
 
@@ -100,7 +101,7 @@ def posts(request, filter=None):
     parameter: page (page number)
     """
 
-    # recuperate user if authenticated
+    # recuperate user
     user = request.user
 
     # POST request to create a new post
@@ -128,8 +129,11 @@ def posts(request, filter=None):
             posts = Post.objects.all().order_by('-created')
         elif not user.is_authenticated:
             return JsonResponse({'error': 'Authentication required.'}, status=401)
-        elif filter == 'tracked' and user:
-            posts = Post.objects.filter(follows=user).order_by('-created')
+        elif filter == 'tracked' and user.is_authenticated:
+
+            # Get the posts of the users followed by the current user
+            followed_users = user.following.all().values_list('followed', flat=True)
+            posts = Post.objects.filter(user__in=followed_users).order_by('-created')
         else:
             return JsonResponse({'error': 'Page not found'}, status=404)        
 
@@ -203,30 +207,35 @@ def like(request, id):
             return JsonResponse({'error': 'Post not found'}, status=404)
         
 
-def follow_post(request, id):
+def follow_user(request, id):
     """
-    Follow a post based on his id. If user already follow the post, unfollowit.
+    Follow a user based on his id. If user already follow the user, unfollow him.
     """
     user = request.user
+    
+    # get the user to follow
+    try:
+        followed_user = User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': f'User {id} not found'}, status=404)
+
     if not user.is_authenticated:
         return JsonResponse({'error': 'Authentication required.'}, status=401)
+    elif user.id == id:
+        return JsonResponse({'error': 'You cannot follow yourself'}, status=400)
     
     if request.method == 'POST':
-        try:
-            post = Post.objects.get(id=id)
-            
-            # Check if user already follow the post, and if so, unfollow
-            if user in post.follows.all():
-                post.follows.remove(user)
-                return JsonResponse({'message': 'Post unfollowed successfully', 'action': 'unfollow'})
-            
-            # else make the user follow the post
-            else:
-                post.follows.add(user)
-                return JsonResponse({'message': 'Post followed successfullly', 'action': 'follow'})
-
-        except Post.DoesNotExist:
-            return JsonResponse({'error': 'Post not found'}, status=404)
+        is_followed = Follower.is_followed(user, followed_user)
+        
+        # Check if user already follow, and if so, unfollow
+        if is_followed:
+            Follower.objects.filter(user=user, followed=followed_user).delete()
+            return JsonResponse({'message': f'User {followed_user.id} unfollowed successfully', 'action': 'unfollow'})
+        
+        # else make the user follow the post
+        else:
+            Follower.objects.create(user=user, followed=followed_user)
+            return JsonResponse({'message': f'Following user {followed_user.id}', 'action': 'follow'})
 
 def comments(request, id):
     """

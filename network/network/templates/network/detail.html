@@ -10,9 +10,9 @@
 <div class="container" id="postContainer" data-postid='{{ post.id }}'>
   <div class="row justify-content-center align-items-center">
     <div class="col-md-6 d-flex">
-      <h2>Published by {{ post.user }}</h2>
+      <h2 id ="postAuthor" data-userid='{{ post.user.id }}'>Published by {{ post.user }}</h2>
     </div>
-    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followButton">{% if not isFollowed %} Follow {% else %} Unfollow {% endif %}</button></div>
+    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followButton" {% if is_author %} disabled {% endif %} {% if not user.is_authenticated %} hidden {% endif %}>{% if not isFollowed %} Follow {% else %} Unfollow {% endif %}</button></div>
     <div class="col-md-8"><hr class="mx-auto"></div>
   </div>
 

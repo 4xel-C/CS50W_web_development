@@ -169,14 +169,45 @@ def posts(request, filter=None):
 
 def post_id(request, id):
     """
-    Request the data base to get one specific post form his id.
+    Method: GET: Request the data base to get one specific post form his id.
+    Method: POST: Edit the content of an existing post.
     """
+
+    # Check the id sent to the api
     try:
-        post = Post.objects.get(id=id)
-    except ObjectDoesNotExist:
-        return JsonResponse({'error': 'Object does not exist.'}, status=404)
+        if not isinstance(id, int):
+            raise ValueError
+    except ValueError:
+        return JsonResponse({'error': 'Invalid post ID format'}, status=400)
+
+    # GET Method to fetch 1 specific post
+    if request.method == 'GET':
+        try:
+            post = Post.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return JsonResponse({'error': 'Post does not exist.'}, status=404)
+        
+        return JsonResponse({'post': post.serialize(request.user)}, status=200)
     
-    return JsonResponse({'post': post.serialize(request.user)}, status=200)
+    # POST method to edit 1 specific post.
+    elif request.method == 'POST':
+        content = json.loads(request.body.decode('utf-8'))
+
+        if not content:
+            return JsonResponse({"error": "Post content is required"}, status=400)
+        
+        # get the post
+        try:
+            post = Post.objects.get(id=id)
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Post does not exist.'}, status=404)
+
+        # update the content of the post and save
+        post.content = content
+        post.save()
+
+        return JsonResponse({'message': 'Post successfully updated'}, status=200)
+
         
 
 

@@ -1,4 +1,4 @@
-import { fetchPosts, follow, isAuthenticated, like, postNewPost, showAlert } from './api.js';
+import { editPost, fetchPosts, follow, isAuthenticated, like, postNewPost, showAlert } from './api.js';
 
 // ----------------------------------------Builder functions--------------------------------------------------
 
@@ -10,11 +10,18 @@ function createPostElement(post){
     newPost.classList.add('postCard');
     newPost.innerHTML = `
         <div class="card mb-3">
-            <div class="card-header fw-bold">
-                ${post.user}
+            <div class="card-header fw-bold justify-content-between d-flex">
+                ${post.user} 
+                <div>
+                    ${post.is_author? '<a href="" class="edit-button">Edit</a>' : ''}
+                    ${post.is_author? '<a href="" class="confirm-button" hidden>Confirm</a>' : ''}
+                </div>
             </div>
             <div class="card-body">
-                <p class="card-text">${post.content}</p>
+                <p class="card-text">
+                    <div class='post-body'>${post.content}</div>
+                    <textarea class="form-control edit-area" hidden rows="3">${post.content}</textarea>
+                </p>
                 <div class="container text-end">
                     <button class="btn p-1 btn-outline-primary follow-button ${post.followed? 'active' : ''}">${post.followed? 'Unfollow' : 'Follow'}</button>
                 </div>
@@ -29,15 +36,34 @@ function createPostElement(post){
         </div>
         `;
     
-    // Event listeners
+    // query selectors
     const likeButton =  newPost.querySelector('.like-button');
     const followButton = newPost.querySelector('.follow-button');
+    const editButton = newPost.querySelector('.edit-button');
+    const confirmButton = newPost.querySelector('.confirm-button');
+    const postBody = newPost.querySelector('.post-body');
+    const editArea = newPost.querySelector('.edit-area');
 
+    // function to toggle editing state
+    function toggleEditState() {
+        if (editButton.innerHTML === 'Edit') {
+            editButton.innerHTML = 'Cancel';
+            confirmButton.hidden = false;
+            postBody.hidden = true;
+            editArea.hidden = false;
+        } else {
+            editButton.innerHTML = 'Edit';
+            postBody.hidden = false;
+            editArea.hidden = true;
+            confirmButton.hidden = true;
+        }
+    }
+    
     // deactivate the follow button if the user is the author of the post
     if (post.is_author){
+
         followButton.disabled = true;
     }
-
 
     // Add the event listener to the like button
     likeButton.addEventListener('click', async () => {
@@ -86,6 +112,33 @@ function createPostElement(post){
         }
     });
 
+    // add the event listener to the edit button
+    editButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        // replace the body by a textfield and update the Edit fonction to allow the toggle between views
+        toggleEditState();
+    });
+
+    // add the event listener to confirm the modification
+    confirmButton?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        
+        // Get the value of the edited text
+        let text = editArea.value;
+        if (!text){
+            showAlert("The post cannot be empty", "danger");
+            return;
+        }
+
+        // send the query to the api
+        await editPost(text, post.id)
+
+        // restore the default view of the post with the edited text
+        toggleEditState();
+        postBody.innerHTML = text; 
+        showAlert("Post edited!");
+   }) 
     return newPost;
 }
 
@@ -184,7 +237,6 @@ async function update_page(page){
     // update pagination buttons diplays
     updatePaginationButtons(data.page, data.total_pages);
 }
-
 
 // ------------------------------------------------------------------------Main logic--------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {

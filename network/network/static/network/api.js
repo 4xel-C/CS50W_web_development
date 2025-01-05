@@ -3,13 +3,16 @@
 // Create a bootstrap alert and append it to the alert container
 export function showAlert(message, type="success") {
     const alert = document.createElement("div");
-    alert.className = `alert alert-${type} alert-dismissible text-center`;
+    alert.className = `alert alert-${type} alert-dismissible text-center position-fixed top-0 start-50 translate-middle-x w-100`;
     alert.role = "alert";
     alert.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
+    // Display the alert in front of all the other elements
+    alert.style.zIndex = '9999';
+
     // Delete the previous alert and Add the alert to the container
     const alertContainer = document.getElementById("alertContainer");
     alertContainer.innerHTML = '';
@@ -20,7 +23,7 @@ export function showAlert(message, type="success") {
         alert.classList.remove("show");
         alert.classList.add("fade");
         setTimeout(() => alert.remove(), 500);
-    }, 5000);
+    }, 3000);
 }
 
 // Function to get specific cookies (for csrf validation)
@@ -49,6 +52,36 @@ export async function postNewPost(content) {
         const csrfToken = getCookie('csrftoken');
 
         response = await fetch('/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(content)
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error : ${response.status}, Message : ${errorData.error?.message || 'Unknown Error'}`)
+        }
+
+        const data = await response.json()
+        return data;
+
+    } catch (error) {
+        console.error('Problem occured while fetching datas: ', error.message);
+        throw error;
+    }
+}
+
+// Send a POST request to the API to edit an existing post
+export async function editPost(content, postId) {
+    let response;
+    try {
+        // get the CSRF token
+        const csrfToken = getCookie('csrftoken');
+
+        response = await fetch(`/posts/${postId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

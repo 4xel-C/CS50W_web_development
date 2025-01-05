@@ -10,6 +10,7 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
     path("register", views.register, name="register"),
     path("detail/<int:id>", views.detail, name="detail"),
+    path("profile/<int:id>", views.profile, name="profile"),
 
     # API routes
     path("auth", views.is_authenticated, name='is_authenticated'),

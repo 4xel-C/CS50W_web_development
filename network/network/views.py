@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
@@ -70,7 +71,12 @@ def register(request):
 def detail(request, id):
 
     # render the detail page of a post passing the post as context for displaying details.
-    post = Post.objects.get(id=id)
+    try:
+        post = Post.objects.get(id=id)
+    except ObjectDoesNotExist:
+        messages.error(request, "The post you requested does not exist.")
+        return HttpResponseRedirect(reverse("index"))
+    
     is_followed = Follower.is_followed(request.user, post.user) if request.user.is_authenticated else False
     
     return render(request, "network/detail.html", {
@@ -79,6 +85,18 @@ def detail(request, id):
         'is_author': post.is_author(request.user)
     })
 
+def profile(request, id):
+
+    # Get the user informations
+    try:
+        account = User.objects.get(id=id)
+    except ObjectDoesNotExist:
+            messages.error(request, "The profile you requested does not exist.")
+            return HttpResponseRedirect(reverse("index"))
+    
+    return render(request, "network/profile.html", {
+        'account': account
+    })
 
 # --------------------------------------------------------API routes----------------------------------------------------------------
 def is_authenticated(request):

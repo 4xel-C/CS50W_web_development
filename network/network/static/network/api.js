@@ -111,7 +111,10 @@ export async function fetchPosts(page=1){
 
     // declare possible URLs to add urls if needed
     let filter = null;
+    let account_id = null;
 
+    console.log(window.location.pathname);
+    
     // Check URL to get the correct fetch
     if (window.location.pathname === '/following') {
         filter = 'tracked';
@@ -121,13 +124,15 @@ export async function fetchPosts(page=1){
     try {
 
         // Get the post depending of the filter: if no filter specified, fetch all posts
-        if (!filter) {
+        if (!filter && !account_id) {
             response = await fetch(`/posts?page=${page}`);
         }
 
         // if filter specified of specific ID is passed, fetch the corresponding post(s)
-        else if (filter === 'tracked' || Number.isInteger(filter)){
+        else if (filter === 'tracked'){
             response = await fetch(`/posts/filter/${filter}?page=${page}`);
+        } else if (account_id) { 
+            pass
         } else {
             throw new Error('Invalid filter url')
         }

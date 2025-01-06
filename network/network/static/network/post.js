@@ -1,7 +1,6 @@
 import { editPost, fetchPosts, follow, isAuthenticated, like, postNewPost, showAlert } from './api.js';
 
-// ----------------------------------------Builder functions--------------------------------------------------
-
+// -------------------------------------------Builder functions---------------------------------------
 // Create a new element and his listener containing all the informations from a post.
 function createPostElement(post){
     // Create the new element
@@ -11,7 +10,7 @@ function createPostElement(post){
     newPost.innerHTML = `
         <div class="card mb-3">
             <div class="card-header fw-bold justify-content-between d-flex">
-                ${post.user} 
+                <a href='/profile/${post.userId}' class='text-dark'>${post.user}</a>
                 <div>
                     ${post.is_author? '<a href="" class="edit-button">Edit</a>' : ''}
                     ${post.is_author? '<a href="" class="confirm-button" hidden>Confirm</a>' : ''}
@@ -142,6 +141,7 @@ function createPostElement(post){
     return newPost;
 }
 
+
 // Create a pagination button corresponding to the desired page number and add the corresponding event listener if not already created
 function createPageItem(pageNumber){
 
@@ -213,7 +213,7 @@ function updatePaginationButtons(page, total_pages){
 async function update_page(page){
 
     const data = await fetchPosts(page);
-    console.log(data);
+
     // Check if there are no posts to display
     if (data.posts.length === 0){
         postContainer.innerHTML = `<div class="alert alert-info text-center" role="alert">No posts to display</div>`;

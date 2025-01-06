@@ -105,7 +105,7 @@ def is_authenticated(request):
     """
     return JsonResponse({'is_authenticated': request.user.is_authenticated})
 
-def posts(request, filter=None):
+def posts(request, filter=None, user_id=None):
     """
     Request the API to POST a new post:
     url: /posts
@@ -114,7 +114,12 @@ def posts(request, filter=None):
 
     Request the API for all the posts available in the database and return a paginated response depending on which page is clicked
     Accept a 'filter' url which can be 'tracked' to only fetch for the followed posts.
-    url: /posts/<filter>
+    url: /posts/filter/<filter>
+    method: GET
+    parameter: page (page number)
+
+    Accept a 'user_id' to get all the posts from a user
+    url: /posts/user/user_id
     method: GET
     parameter: page (page number)
     """
@@ -124,6 +129,7 @@ def posts(request, filter=None):
 
     # POST request to create a new post
     if request.method == "POST":
+
         # check if user is authenticated
         if not user.is_authenticated:
             return JsonResponse({"error": "User not authenticated"}, status=401)
@@ -143,11 +149,21 @@ def posts(request, filter=None):
     elif request.method == "GET":
 
         # query for the correct posts
-        if not filter:
+        if not filter and not user_id:
             posts = Post.objects.all().order_by('-created')
+
+        elif not filter and user_id:
+            try:
+                account = User.objects.get(id=user_id)
+            except ObjectDoesNotExist:
+                return JsonResponse({'error': 'User not found'}, status=404)
+            
+            posts = account.posts.all().order_by('-created')
+
         elif not user.is_authenticated:
             return JsonResponse({'error': 'Authentication required.'}, status=401)
-        elif filter == 'tracked' and user.is_authenticated:
+        
+        elif filter == 'tracked' and user.is_authenticated and not user_id:
 
             # Get the posts of the users followed by the current user
             followed_users = user.following.all().values_list('followed', flat=True)

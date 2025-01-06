@@ -3,6 +3,10 @@ from django.db import models
 
 
 class User(AbstractUser):
+    
+    def total_likes_received(self):
+        """Calculate the total likes received by the user's posts."""
+        return Post.objects.filter(user=self).aggregate(total_likes=models.Count('likes'))['total_likes'] or 0
     pass
 
 

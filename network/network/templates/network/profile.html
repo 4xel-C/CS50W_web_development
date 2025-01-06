@@ -6,9 +6,66 @@
 <!-- Success Alert -->
 <div id="alertContainer"></div>
 
+<div class="row justify-content-center align-items-center mb-2">
+    <div class="col-md-6">
+        <h1>{{ account.username }}</h1>
+    </div>
+    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followButton" {% if is_author %} disabled {% endif %} {% if not user.is_authenticated %} hidden {% endif %}>{% if not isFollowed %} Follow {% else %} Unfollow {% endif %}</button>
+    </div>
+</div>
 
-<h1>{{ account.username }}</h1>
- 
+<!-- statistics -->
+<div class="row justify-content-around align-items-center mb-2">
+    <div class="col-md-5 border">
+        <dl class="row align-items-center justify-content-around">
+            <dt class="col-7">Number of follows</dt>
+            <dd class="col-3 text-end">{{ account.following.count }}</dd>
+
+            <dt class="col-7">Number of followers</dt>
+            <dd class="col-3 text-end">
+                {{ account.followers.count }}
+            </dd>
+
+            <dt class="col-7">Number of posts</dt>
+            <dd class="col-3 text-end">
+                {{ account.posts.count }}
+            </dd>
+
+            <dt class="col-7">Total likes:</dt>
+            <dd class="col-3 text-end">
+                {{ account.total_likes_received }}
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<!-- user posts -->
+<div class="row justify-content-center mb-2">
+    <div class="col-md-8"><hr class="mx-auto"></div>
+    <div class="col-md-8 text-center"><h4 class="mx-auto">All posts from {{ account.username }}</h3></div>
+</div>
+
+<!-- Card container for posts -->
+<div class="row justify-content-center" id="postContainer">
+</div>
+
+<!-- Pagination -->
+{% if account.posts.count != 0 %}
+<div class="container-flex">
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center" id="pagination">
+        <li class="page-item disabled" id="previous-page">
+            <a class="page-link">Previous</a>
+        </li>
+        <li class="page-item"></li>
+        <li class="page-item disabled"  id="next-page">
+            <a class="page-link">Next</a>
+        </li>
+    </ul>
+</nav>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block script %}

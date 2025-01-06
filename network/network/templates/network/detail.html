@@ -12,7 +12,11 @@
     <div class="col-md-6 d-flex">
       <h2 id ="postAuthor" data-userid='{{ post.user.id }}'>Published by <a href='/profile/{{ post.user.id }}' class='text-dark'>{{ post.user }}</a></h2>
     </div>
-    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followButton" {% if is_author %} disabled {% endif %} {% if not user.is_authenticated %} hidden {% endif %}>{% if not isFollowed %} Follow {% else %} Unfollow {% endif %}</button></div>
+    {% if not isFollowed %}
+    <div class="col-md-2 text-end mb-2"><button class="btn p-1 btn-outline-primary w-100" id="followButton" {% if is_author or not user.is_authenticated %} hidden {% endif %}>Follow</button></div>
+    {% else %}
+    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followButton" {% if is_author or not user.is_authenticated %} hidden {% endif %}>Unfollow</button></div>
+    {% endif %}
     <div class="col-md-8"><hr class="mx-auto"></div>
   </div>
 

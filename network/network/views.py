@@ -94,9 +94,13 @@ def profile(request, id):
             messages.error(request, "The profile you requested does not exist.")
             return HttpResponseRedirect(reverse("index"))
     
+    # check if the user already follow the account he is visiting
+    is_followed = Follower.is_followed(request.user, account) if request.user.is_authenticated else False
+
     return render(request, "network/profile.html", {
         'account': account,
-        'me': account == request.user
+        'me': account == request.user,
+        'isFollowed': is_followed
     })
 
 # --------------------------------------------------------API routes----------------------------------------------------------------

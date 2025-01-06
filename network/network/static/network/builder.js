@@ -74,7 +74,10 @@ export function createPostElement(post){
 
         // get the total likes if on a profile page
         const totalElement = document.querySelector('.total-likes');
-        let total = parseInt(totalElement.innerHTML);
+        let total;
+        if (totalElement){
+            total = parseInt(totalElement.innerHTML);
+        }
     
         if (await isAuthenticated()){
             try {
@@ -84,11 +87,15 @@ export function createPostElement(post){
                 likeButton.querySelector('.postLikes').textContent = data.likesCount;
                 if (data.action === 'like'){
                     likeButton.classList.add('text-danger');
-                    totalElement.innerHTML = total + 1;
+                    if (totalElement){
+                        totalElement.innerHTML = total + 1;
+                    }
 
                 } else if (data.action === 'unlike'){
                     likeButton.classList.remove('text-danger');
-                    totalElement.innerHTML = total - 1;
+                    if (totalElement){
+                        totalElement.innerHTML = total - 1;
+                    }
                 }
             } catch (error) {
                 console.error('Error while liking the post: ', error.message);
@@ -248,4 +255,21 @@ export async function update_page(page){
 
     // update pagination buttons diplays
     updatePaginationButtons(data.page, data.total_pages);
+}
+
+
+// update the front-end of the follow button when clicked on the comment and profile page
+export function updateFollowButton(response, button)  {
+    if (response.action == 'follow') {
+        showAlert('You are now following this user', 'success');
+        button.innerHTML = 'Unfollow';
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-primary');
+        
+    } else if (response.action == 'unfollow') {
+        button.innerHTML = 'Follow';
+        button.classList.add('btn-outline-primary');
+        button.classList.remove('btn-primary');
+        showAlert('You are not following this user anymore', 'warning');
+    }
 }

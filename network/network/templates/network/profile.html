@@ -10,7 +10,12 @@
     <div class="col-md-6">
         <h1 id="userId" data-id='{{ account.id }}'>{{ account.username }}</h1>
     </div>
-    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followProfile" {% if me %} hidden {% endif %} {% if not user.is_authenticated %} hidden {% endif %}>{% if not isFollowed %} Follow {% else %} Unfollow {% endif %}</button>
+    {% if not isFollowed %}
+    <div class="col-md-2 text-end mb-2"><button class="btn p-1 btn-outline-primary w-100" id="followProfile" {% if me or not user.is_authenticated %} hidden {% endif %}>Follow</button></div>
+    {% else %}
+    <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followProfile" {% if me or not user.is_authenticated %} hidden {% endif %}>Unfollow</button></div>
+    {% endif %}
+    <!-- <div class="col-md-2 text-end mb-2"><button class="btn btn-primary w-100" id="followProfile" {% if me %} hidden {% endif %} {% if not user.is_authenticated %} hidden {% endif %}>{% if not isFollowed %} Follow {% else %} Unfollow {% endif %}</button> -->
     </div>
 </div>
 
@@ -22,7 +27,7 @@
             <dd class="col-3 text-end">{{ account.following.count }}</dd>
 
             <dt class="col-7">Number of followers</dt>
-            <dd class="col-3 text-end">
+            <dd class="col-3 text-end total-followers">
                 {{ account.followers.count }}
             </dd>
 

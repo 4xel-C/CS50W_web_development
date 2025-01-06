@@ -1,5 +1,7 @@
 import { fetchComments, follow, postNewComment, showAlert } from './api.js';
 
+import { updateFollowButton } from './builder.js';
+
 // -------------------------------------builder functions
 // create a new comment element
 function createCommentElement(comment) {
@@ -62,13 +64,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await follow(userId);
 
             // update the follow button
-            if (response.action == 'follow') {
-                showAlert('You are now following this user', 'success');
-                followButton.innerHTML = 'Unfollow';
-            } else if (response.action == 'unfollow') {
-                followButton.innerHTML = 'Follow';
-                showAlert('You are not following this user anymore', 'warning');
-            }
+            updateFollowButton(response, followButton);
+
+            // if (response.action == 'follow') {
+            //     showAlert('You are now following this user', 'success');
+            //     followButton.innerHTML = 'Unfollow';
+            //     followButton.classList.remove('btn-outline-primary');
+            //     followButton.classList.add('btn-primary');
+            // } else if (response.action == 'unfollow') {
+            //     followButton.innerHTML = 'Follow';
+            //     followButton.classList.add('btn-outline-primary');
+            //     followButton.classList.remove('btn-primary');
+            //     showAlert('You are not following this user anymore', 'warning');
+            // }
             
         } catch (error) {
             showAlert(error.message, 'danger');

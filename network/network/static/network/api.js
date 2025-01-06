@@ -110,14 +110,15 @@ Fetch data for posts from API and return them as a Json; Accept a specific post 
 export async function fetchPosts(page=1){
 
     // declare possible URLs to add urls if needed
+    const url = window.location.pathname;
     let filter = null;
     let account_id = null;
-
-    console.log(window.location.pathname);
     
     // Check URL to get the correct fetch
-    if (window.location.pathname === '/following') {
+    if (url === '/following') {
         filter = 'tracked';
+    } else if (url.includes('profile')) {
+        account_id = url.split('/').pop();
     }
 
     let response;
@@ -128,11 +129,13 @@ export async function fetchPosts(page=1){
             response = await fetch(`/posts?page=${page}`);
         }
 
-        // if filter specified of specific ID is passed, fetch the corresponding post(s)
+        // if filter specified fetch the corresponding post(s)
         else if (filter === 'tracked'){
             response = await fetch(`/posts/filter/${filter}?page=${page}`);
+        
+        // if and account_id is detecte din the url, fetch the corresponding posts
         } else if (account_id) { 
-            pass
+            response = await fetch(`/posts/user/${account_id}?page=${page}`);
         } else {
             throw new Error('Invalid filter url')
         }

@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Follow buton
     followButton.addEventListener('click', async () => {
         try {
-            console.log(userId)
+
             const response = await follow(userId);
 
             // update the follow button

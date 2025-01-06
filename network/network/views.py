@@ -95,7 +95,8 @@ def profile(request, id):
             return HttpResponseRedirect(reverse("index"))
     
     return render(request, "network/profile.html", {
-        'account': account
+        'account': account,
+        'me': account == request.user
     })
 
 # --------------------------------------------------------API routes----------------------------------------------------------------

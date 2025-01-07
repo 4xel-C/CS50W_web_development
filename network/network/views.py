@@ -118,12 +118,12 @@ def posts(request, filter=None, user_id=None):
     parameter: content
 
     Request the API for all the posts available in the database and return a paginated response depending on which page is clicked
-    Accept a 'filter' url which can be 'tracked' to only fetch for the followed posts.
-    url: /posts/filter/<filter>
+    Accept a 'filter' uri to only fetch for the followed posts.
+    url: /posts   or /posts/filter/tracked
     method: GET
     parameter: page (page number)
 
-    Accept a 'user_id' to get all the posts from a user
+    Accept a 'user_id' to get all the posts from a specific user
     url: /posts/user/user_id
     method: GET
     parameter: page (page number)
@@ -209,7 +209,11 @@ def posts(request, filter=None, user_id=None):
 def post_id(request, id):
     """
     Method: GET: Request the data base to get one specific post form his id.
+
     Method: POST: Edit the content of an existing post.
+        Body: require then content of the post
+
+    url: posts/<id>
     """
 
     # Check the id sent to the api
@@ -230,6 +234,10 @@ def post_id(request, id):
     
     # POST method to edit 1 specific post.
     elif request.method == 'POST':
+
+        # get the user:
+        user = request.user
+
         content = json.loads(request.body.decode('utf-8'))
 
         if not content:
@@ -241,11 +249,13 @@ def post_id(request, id):
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Post does not exist.'}, status=404)
 
-        # update the content of the post and save
-        post.content = content
-        post.save()
-
-        return JsonResponse({'message': 'Post successfully updated'}, status=200)
+        # update the content of the post and save only if the user own the post
+        if user == post.user:
+            post.content = content
+            post.save()
+            return JsonResponse({'message': 'Post successfully updated'}, status=200)
+        else:
+            return JsonResponse({'error': 'You cannot edit a post form another user'}, status=403)
 
         
 

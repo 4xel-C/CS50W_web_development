@@ -32,12 +32,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await follow(userId);
 
-            // update the follow button
+            // update the follow button and the count
             updateFollowButton(response, followProfile);
             if (response.action == 'follow') {
                 totalFollowers.innerHTML = total_follows + 1;
+                total_follows += 1
             } else if (response.action == 'unfollow') {
-                totalFollowers.innerHTML -= 1;
+                totalFollowers.innerHTML = total_follows - 1;
+                total_follows -= 1;
             }
             
         } catch (error) {

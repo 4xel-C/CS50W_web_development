@@ -1,6 +1,7 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
+
     {% if messages %}
         {% for message in messages %}
             {% if message.tags == "success" %}
@@ -20,8 +21,8 @@
             </div>
             {% endif %}
         {% endfor %}
-
     {% endif %}
+
     <div class="container">
         <h2>{{ listing.item }} Details</h2>
 

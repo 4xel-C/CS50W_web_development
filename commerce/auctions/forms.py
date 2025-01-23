@@ -17,6 +17,6 @@ class AuctionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # no required categories, automaticly set up to "Other" if no specified.
+        # no requiered categories, automaticly set up to "Other" if no specified.
         self.fields['category'].required = False
 

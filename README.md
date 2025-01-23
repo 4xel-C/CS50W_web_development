@@ -5,8 +5,8 @@ You can find all the courses and the exercice description  there: https://cs50.h
 This certification build thorugh multiple project solid skills in managing both front end and backend using JavaScript, Bootstrap, and web framework django in Python.
 
 # Description of the projects
-- **Search:** A simple exercice to copy the Google page front end
-- **wiki:** A simple web application to emulate a wikipedia page style. Using dynamic routing to access the different pages.
-- **Network:** A web application designed to be used as a networking application. With account creation, posts, like, dynamic post edition.
-- **mail:** A web applicaiton designed to emulate a mailbox application.
-- **commerce:** A web application designed to managed auction sale. 
+- **[Search:](search)** A simple exercice to copy the Google page front end
+- **[Wiki:](wiki)** A simple web application to emulate a wikipedia page style. Using dynamic routing to access the different pages.
+- **[Network:](network)** A web application designed to be used as a networking application. With account creation, posts, like, dynamic post edition.
+- **[Mail:](mail)** A web applicaiton designed to emulate a mailbox application.
+- **[Commerce:](commerce)** A web application designed to managed auction sale. 

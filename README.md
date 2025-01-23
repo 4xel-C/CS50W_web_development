@@ -8,5 +8,5 @@ This certification build thorugh multiple project solid skills in managing both 
 - **[Search:](search)** A simple exercice to copy the Google page front end
 - **[Wiki:](wiki)** A simple web application to emulate a wikipedia page style. Using dynamic routing to access the different pages.
 - **[Network:](network)** A web application designed to be used as a networking application. With account creation, posts, like, dynamic post edition.
-- **[Mail:](mail)** A web applicaiton designed to emulate a mailbox application.
+- **[Mail:](mail)** A web application designed to emulate a mailbox application.
 - **[Commerce:](commerce)** A web application designed to managed auction sale. 

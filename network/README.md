@@ -64,5 +64,3 @@ Visit `http://127.0.0.1:8000/` in your browser to view the project.
 
 - If `pip install` fails, make sure you have the correct Python version and pip installed.
 - If migrations fail, try `python manage.py makemigrations` first.
-
-Happy coding!
